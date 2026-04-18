@@ -1,0 +1,307 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}System Administration — CourseSync{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/sysadmin.css' %}">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-mark">CourseSync</div>
+        <div class="brand-role">Sys Admin</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">System</div>
+      <a class="nav-item active" href="{% url 'sysadmin_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Overview
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"/></svg>
+        System Health
+        <div class="dot dot-amber"></div>
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Audit Log
+      </a>
+      <div class="nav-section">Access Control</div>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+        Users & Roles
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+        RBAC Policies
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+        SOD Constraints
+        <div class="dot dot-red"></div>
+      </a>
+      <div class="nav-section">Operations</div>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 7v10c0 2.21 3.582 4 8 4s8-1.79 8-4V7M4 7c0 2.21 3.582 4 8 4s8-1.79 8-4M4 7c0-2.21 3.582-4 8-4s8 1.79 8 4"/></svg>
+        Database
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"/><path d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
+        Settings
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/></svg>
+        Backups
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+        <div>
+          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="user-role">{{ request.user.role|default:"sysadmin"|title }}</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">Logout</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">// system_overview</div>
+        <div class="page-sub">CourseSync v2.4.1 · Spring 2025 · Last sync: 2 min ago</div>
+      </div>
+      <div class="system-status">
+        <div class="pulse"></div>
+        <span style="color: var(--green); font-family: var(--mono); font-size: 12px;">All systems operational</span>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat border-accent">
+        <div class="stat-label">Total Users</div>
+        <div class="stat-value">5,241</div>
+        <div class="stat-sub">Across all roles</div>
+        <div class="stat-trend trend-up">↑ +38 this week</div>
+      </div>
+      <div class="stat border-green">
+        <div class="stat-label">Active Sessions</div>
+        <div class="stat-value">312</div>
+        <div class="stat-sub">Right now</div>
+        <div class="stat-trend c-green">● Live</div>
+      </div>
+      <div class="stat border-red">
+        <div class="stat-label">SOD Violations</div>
+        <div class="stat-value">2</div>
+        <div class="stat-sub">Require review</div>
+        <div class="stat-trend trend-down">⚑ Action required</div>
+      </div>
+      <div class="stat border-amber">
+        <div class="stat-label">Failed Logins (24h)</div>
+        <div class="stat-value">17</div>
+        <div class="stat-sub">3 accounts flagged</div>
+        <div class="stat-trend c-amber">⚠ Monitor</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <!-- User & Role Management -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">// user_role_assignments</span>
+            <span class="card-action">+ Add user →</span>
+          </div>
+          <table class="role-table">
+            <thead>
+              <tr>
+                <th>User</th>
+                <th>Role</th>
+                <th>Department</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="user-name-mono">r.nakamura</div><div class="user-id-mono">uid:1042</div></td>
+                <td><span class="role-badge rb-professor">PROFESSOR</span></td>
+                <td style="color:var(--muted)">Computer Science</td>
+                <td><span class="status-active">● active</span></td>
+                <td><button class="btn-table">Edit</button><button class="btn-table danger">Revoke</button></td>
+              </tr>
+              <tr>
+                <td><div class="user-name-mono">k.park</div><div class="user-id-mono">uid:0811</div></td>
+                <td><span class="role-badge rb-registrar">REGISTRAR</span></td>
+                <td style="color:var(--muted)">Registrar Office</td>
+                <td><span class="status-active">● active</span></td>
+                <td><button class="btn-table">Edit</button><button class="btn-table danger">Revoke</button></td>
+              </tr>
+              <tr>
+                <td><div class="user-name-mono">s.lee</div><div class="user-id-mono">uid:0923</div></td>
+                <td><span class="role-badge rb-advisor">ADVISOR</span></td>
+                <td style="color:var(--muted)">Computer Science</td>
+                <td><span class="status-active">● active</span></td>
+                <td><button class="btn-table">Edit</button><button class="btn-table danger">Revoke</button></td>
+              </tr>
+              <tr>
+                <td><div class="user-name-mono">j.martinez</div><div class="user-id-mono">uid:4847</div></td>
+                <td><span class="role-badge rb-student">STUDENT</span></td>
+                <td style="color:var(--muted)">Computer Science</td>
+                <td><span class="status-active">● active</span></td>
+                <td><button class="btn-table">Edit</button><button class="btn-table danger">Revoke</button></td>
+              </tr>
+              <tr>
+                <td><div class="user-name-mono">root_admin</div><div class="user-id-mono">uid:0001</div></td>
+                <td><span class="role-badge rb-admin">SYS_ADMIN</span></td>
+                <td style="color:var(--muted)">IT Operations</td>
+                <td><span class="status-active">● active</span></td>
+                <td><button class="btn-table">Edit</button></td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="padding: 10px 14px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
+            <span style="font-family: var(--mono); font-size: 10px; color: var(--muted)">5,241 total users · Page 1 of 105</span>
+            <div style="display:flex;gap:6px;">
+              <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px;">← Prev</button>
+              <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px;">Next →</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Audit Log -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">// audit_log (recent)</span>
+            <span class="card-action">Full log →</span>
+          </div>
+          <div class="log-item">
+            <div class="log-time">14:32:07</div>
+            <div class="log-indicator" style="background:var(--amber)"></div>
+            <div>
+              <div><span class="log-actor">k.park</span> <span class="log-action">approved enrollment request for</span> <span class="log-target">j.martinez → CS 4820</span></div>
+              <div class="log-type">ENROLL_APPROVE · rbac_check: PASS</div>
+            </div>
+          </div>
+          <div class="log-item">
+            <div class="log-time">14:28:54</div>
+            <div class="log-indicator" style="background:var(--red)"></div>
+            <div>
+              <div><span class="log-actor">l.fischer</span> <span class="log-action">denied access to</span> <span class="log-target">GRADE_WRITE on CS 4850</span></div>
+              <div class="log-type">ACCESS_DENIED · role: STUDENT · required: PROFESSOR</div>
+            </div>
+          </div>
+          <div class="log-item">
+            <div class="log-time">14:20:11</div>
+            <div class="log-indicator" style="background:var(--green)"></div>
+            <div>
+              <div><span class="log-actor">root_admin</span> <span class="log-action">assigned role</span> <span class="log-target">ADVISOR → s.lee</span></div>
+              <div class="log-type">ROLE_ASSIGN · RBAC3 hierarchy updated</div>
+            </div>
+          </div>
+          <div class="log-item">
+            <div class="log-time">14:11:03</div>
+            <div class="log-indicator" style="background:var(--amber)"></div>
+            <div>
+              <div><span class="log-actor">r.nakamura</span> <span class="log-action">submitted grades for</span> <span class="log-target">CS 3410 · 22 records</span></div>
+              <div class="log-type">GRADE_SUBMIT · status: PENDING_REGISTRAR</div>
+            </div>
+          </div>
+          <div class="log-item">
+            <div class="log-time">13:58:42</div>
+            <div class="log-indicator" style="background:var(--red)"></div>
+            <div>
+              <div><span class="log-actor">anon:2.4.5.6</span> <span class="log-action">failed login attempt ×4 —</span> <span class="log-target">account locked</span></div>
+              <div class="log-type">AUTH_FAIL · ip: 2.4.5.6 · action: ACCOUNT_LOCK</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div>
+        <!-- System Health -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">// system_health</span></div>
+          <div class="health-row">
+            <span class="health-name">API latency</span>
+            <div class="health-bar"><div class="hb-fill" style="width:22%;background:var(--green)"></div></div>
+            <span class="health-val c-green">112ms</span>
+          </div>
+          <div class="health-row">
+            <span class="health-name">DB connections</span>
+            <div class="health-bar"><div class="hb-fill" style="width:48%;background:var(--green)"></div></div>
+            <span class="health-val c-green">48/100</span>
+          </div>
+          <div class="health-row">
+            <span class="health-name">CPU usage</span>
+            <div class="health-bar"><div class="hb-fill" style="width:61%;background:var(--amber)"></div></div>
+            <span class="health-val c-amber">61%</span>
+          </div>
+          <div class="health-row">
+            <span class="health-name">Memory</span>
+            <div class="health-bar"><div class="hb-fill" style="width:54%;background:var(--green)"></div></div>
+            <span class="health-val c-green">54%</span>
+          </div>
+          <div class="health-row">
+            <span class="health-name">Disk I/O</span>
+            <div class="health-bar"><div class="hb-fill" style="width:32%;background:var(--green)"></div></div>
+            <span class="health-val c-green">32%</span>
+          </div>
+          <div class="health-row">
+            <span class="health-name">Last backup</span>
+            <div style="flex:1"></div>
+            <span class="health-val c-green" style="font-size:11px">2h ago ✓</span>
+          </div>
+        </div>
+
+        <!-- SOD Constraint Violations -->
+        <div class="card">
+          <div class="card-header" style="border-left: 2px solid var(--red);">
+            <span class="card-title" style="color:var(--red)">// sod_violations</span>
+            <span class="card-action">Review all →</span>
+          </div>
+          <div class="violation-item">
+            <div class="violation-code">SOD-001: PROF+STUDENT</div>
+            <div class="violation-text">User t.chen holds PROFESSOR + STUDENT roles in CS 3410 simultaneously</div>
+            <div class="violation-time">Detected 09:14 today · <span style="color:var(--amber)">Unresolved</span></div>
+          </div>
+          <div class="violation-item">
+            <div class="violation-code">SOD-002: REG_SELF_APPROVE</div>
+            <div class="violation-text">k.park attempted to approve own enrollment override request</div>
+            <div class="violation-time">Detected 11:31 today · <span style="color:var(--red)">Blocked by system</span></div>
+          </div>
+          <div style="padding: 10px 14px; border-top: 1px solid var(--border);">
+            <button class="btn btn-ghost" style="width:100%;font-size:11px;font-family:var(--mono)">resolve violations →</button>
+          </div>
+        </div>
+
+        <!-- Role Distribution -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">// role_distribution</span></div>
+          <div style="padding: 8px 0;">
+            <div class="health-row"><span class="health-name" style="width:90px">STUDENT</span><div class="health-bar" style="flex:1"><div class="hb-fill" style="width:90%;background:var(--muted)"></div></div><span class="health-val" style="color:var(--muted)">4,812</span></div>
+            <div class="health-row"><span class="health-name" style="width:90px">PROFESSOR</span><div class="health-bar" style="flex:1"><div class="hb-fill" style="width:8%;background:var(--accent)"></div></div><span class="health-val" style="color:var(--accent)">284</span></div>
+            <div class="health-row"><span class="health-name" style="width:90px">ADVISOR</span><div class="health-bar" style="flex:1"><div class="hb-fill" style="width:4%;background:var(--green)"></div></div><span class="health-val" style="color:var(--green)">112</span></div>
+            <div class="health-row"><span class="health-name" style="width:90px">REGISTRAR</span><div class="health-bar" style="flex:1"><div class="hb-fill" style="width:1%;background:var(--amber)"></div></div><span class="health-val" style="color:var(--amber)">28</span></div>
+            <div class="health-row"><span class="health-name" style="width:90px">SYS_ADMIN</span><div class="health-bar" style="flex:1"><div class="hb-fill" style="width:1%;background:var(--purple)"></div></div><span class="health-val" style="color:var(--purple)">5</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

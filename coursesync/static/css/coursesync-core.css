@@ -1,0 +1,39 @@
+/* Shared helpers for CourseSync Django templates */
+html { box-sizing: border-box; }
+*, *::before, *::after { box-sizing: inherit; }
+a { text-decoration: none; }
+button, input, select, textarea { font: inherit; }
+img, svg { max-width: 100%; }
+.hidden { display: none !important; }
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+.logout-btn {
+  width: 100%;
+  padding: 8px 12px;
+  margin-top: 10px;
+  border: 1px solid var(--border);
+  border-radius: 7px;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+  transition: 0.15s ease;
+}
+
+.logout-btn:hover {
+  background: var(--surface2);
+}
+
+.logout-btn:hover {
+  opacity: 0.9;
+}

@@ -1,0 +1,236 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}Student Portal — CourseSync{% endblock %}</title>
+  <link rel="stylesheet" href="{% static 'css/student.css' %}">
+</head>
+<body>
+<div class="shell">
+  <!-- Sidebar -->
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">CourseSync</div>
+      <div class="brand-role">Student Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Overview</div>
+      <a class="nav-item active" href="{% url 'student_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h8M4 18h8"/></svg>
+        My Courses
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
+        Schedule
+      </a>
+      <div class="nav-section">Academic</div>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Grades & GPA
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Enrollment
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Transcript
+      </a>
+      <div class="nav-section">Support</div>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        My Advisor
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"/></svg>
+        Notifications
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+        <div>
+          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="user-id">{{ request.user.university_id|default:request.user.username }}</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">Logout</button>
+      </form>
+    </div>
+  </aside>
+
+  <!-- Main -->
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">Good morning, Jordan</div>
+      <div class="page-sub">Spring 2025 · Junior · Computer Science</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat accent">
+        <div class="stat-label">Enrolled Courses</div>
+        <div class="stat-value">5</div>
+        <div class="stat-sub">15 credit hours</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Cumulative GPA</div>
+        <div class="stat-value">3.62</div>
+        <div class="stat-sub">Dean's List eligible</div>
+      </div>
+      <div class="stat warn">
+        <div class="stat-label">Assignments Due</div>
+        <div class="stat-value">3</div>
+        <div class="stat-sub">Next: Friday 5pm</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Credits Completed</div>
+        <div class="stat-value">78</div>
+        <div class="stat-sub">of 120 required</div>
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <div>
+        <!-- Current Courses -->
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="card-header">
+            <span class="card-title">Current Courses</span>
+            <span class="card-action">View all →</span>
+          </div>
+          <div class="col-header">
+            <span class="col-label">Course</span>
+            <span class="col-label">Credits</span>
+            <span class="col-label">Grade</span>
+            <span class="col-label">Progress</span>
+          </div>
+          <div class="card-body">
+            <div class="course-row">
+              <div><div class="course-name">Data Structures & Algorithms</div><div class="course-code">CS 3410 · TR 9:30–10:45</div></div>
+              <div>3</div>
+              <div><span class="grade-badge grade-a">A−</span></div>
+              <div><div class="progress-bar"><div class="progress-fill" style="width:68%"></div></div><div style="font-size:11px;color:var(--muted);margin-top:3px">68%</div></div>
+            </div>
+            <div class="course-row">
+              <div><div class="course-name">Database Systems</div><div class="course-code">CS 4320 · MWF 10:00–10:50</div></div>
+              <div>3</div>
+              <div><span class="grade-badge grade-b">B+</span></div>
+              <div><div class="progress-bar"><div class="progress-fill" style="width:72%;background:var(--info)"></div></div><div style="font-size:11px;color:var(--muted);margin-top:3px">72%</div></div>
+            </div>
+            <div class="course-row">
+              <div><div class="course-name">Software Engineering</div><div class="course-code">CS 3700 · MW 2:00–3:15</div></div>
+              <div>3</div>
+              <div><span class="grade-badge grade-a">A</span></div>
+              <div><div class="progress-bar"><div class="progress-fill" style="width:61%"></div></div><div style="font-size:11px;color:var(--muted);margin-top:3px">61%</div></div>
+            </div>
+            <div class="course-row">
+              <div><div class="course-name">Technical Writing</div><div class="course-code">ENG 3150 · TR 2:00–3:15</div></div>
+              <div>3</div>
+              <div><span class="grade-badge grade-b">B</span></div>
+              <div><div class="progress-bar"><div class="progress-fill" style="width:55%;background:var(--info)"></div></div><div style="font-size:11px;color:var(--muted);margin-top:3px">55%</div></div>
+            </div>
+            <div class="course-row">
+              <div><div class="course-name">Linear Algebra</div><div class="course-code">MATH 2940 · MWF 1:00–1:50</div></div>
+              <div>3</div>
+              <div><span class="grade-badge grade-c">C+</span></div>
+              <div><div class="progress-bar"><div class="progress-fill" style="width:48%;background:var(--warn)"></div></div><div style="font-size:11px;color:var(--muted);margin-top:3px">48%</div></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Today's Schedule -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Today — Tuesday, April 15</span>
+            <span class="card-action">Full schedule →</span>
+          </div>
+          <div class="card-body">
+            <div class="schedule-item">
+              <div class="schedule-time">9:30 AM</div>
+              <div class="schedule-dot"></div>
+              <div><div class="schedule-course">Data Structures & Algorithms</div><div class="schedule-loc">Gates Hall 114 · Prof. Nakamura</div></div>
+            </div>
+            <div class="schedule-item">
+              <div class="schedule-time">10:00 AM</div>
+              <div class="schedule-dot"></div>
+              <div><div class="schedule-course">Database Systems</div><div class="schedule-loc">Rhodes Hall 405 · Prof. Chen</div></div>
+            </div>
+            <div class="schedule-item">
+              <div class="schedule-time">1:00 PM</div>
+              <div class="schedule-dot warn"></div>
+              <div><div class="schedule-course">Linear Algebra</div><div class="schedule-loc">Malott Hall 251 · Prof. Williams · <span style="color:var(--warn);font-weight:500">Quiz today</span></div></div>
+            </div>
+            <div class="schedule-item">
+              <div class="schedule-time">2:00 PM</div>
+              <div class="schedule-dot"></div>
+              <div><div class="schedule-course">Software Engineering</div><div class="schedule-loc">Bloomberg Hall 165 · Prof. Rodriguez</div></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div>
+        <!-- GPA Card -->
+        <div class="card" style="margin-bottom: 14px;">
+          <div class="card-header"><span class="card-title">Academic Standing</span></div>
+          <div class="gpa-display">
+            <div class="gpa-ring">
+              <svg width="120" height="120" viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#E2DDD5" stroke-width="8"/>
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#2D5A3D" stroke-width="8" stroke-dasharray="226 314" stroke-linecap="round"/>
+              </svg>
+              <div class="gpa-center">
+                <div class="gpa-number">3.62</div>
+                <div class="gpa-label">GPA</div>
+              </div>
+            </div>
+            <div class="standing-badge">Good Standing</div>
+          </div>
+          <div class="credit-bar">
+            <div class="credit-label"><span>Credits toward degree</span><span class="credit-value">78 / 120</span></div>
+            <div class="progress-bar"><div class="progress-fill" style="width:65%"></div></div>
+          </div>
+        </div>
+
+        <!-- Enrollment Window -->
+        <div class="enroll-card">
+          <div class="enroll-title">Fall 2025 Enrollment</div>
+          <div class="enroll-sub">Opens in 12 days · April 27, 8:00 AM</div>
+          <button class="enroll-btn">Browse Course Catalog</button>
+        </div>
+
+        <!-- Announcements -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">Announcements</span></div>
+          <div class="card-body">
+            <div class="announce-item">
+              <div class="announce-tag">CS 3410</div>
+              <div class="announce-title">Midterm grades posted — check portal</div>
+              <div class="announce-date">2 hours ago</div>
+            </div>
+            <div class="announce-item">
+              <div class="announce-tag">Registrar</div>
+              <div class="announce-title">Fall 2025 enrollment schedule released</div>
+              <div class="announce-date">Yesterday</div>
+            </div>
+            <div class="announce-item">
+              <div class="announce-tag">CS 4320</div>
+              <div class="announce-title">Project 2 deadline extended to Apr 18</div>
+              <div class="announce-date">2 days ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>
