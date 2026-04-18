@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Faculty Portal — CourseSync</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;600&family=Source+Sans+3:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0F1117;
+    --surface: #161820;
+    --surface2: #1C1E28;
+    --border: #2A2D38;
+    --border2: #343744;
+    --text: #E8E9EF;
+    --muted: #6B6F82;
+    --accent: #6C8EF5;
+    --accent-dim: #1E2440;
+    --green: #4CAF82;
+    --green-dim: #142B1E;
+    --amber: #F5A623;
+    --amber-dim: #2A1F0A;
+    --red: #E05C5C;
+    --red-dim: #2A1414;
+    --radius: 10px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Source Sans 3', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+
+  .shell { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+  /* Sidebar */
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
+  .brand { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+  .brand-mark { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--accent); }
+  .brand-role { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; }
+  .nav { padding: 16px 12px; flex: 1; }
+  .nav-section { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1.2px; padding: 0 8px; margin: 16px 0 6px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 7px; color: var(--muted); font-size: 13.5px; cursor: pointer; transition: all 0.15s; text-decoration: none; margin-bottom: 1px; }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--accent-dim); color: var(--accent); font-weight: 500; }
+  .nav-icon { width: 16px; height: 16px; flex-shrink: 0; }
+  .badge { background: var(--red); color: white; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 10px; margin-left: auto; }
+  .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
+  .user-card { display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent-dim); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; color: var(--accent); flex-shrink: 0; }
+  .user-name { font-size: 13px; font-weight: 500; }
+  .user-title { font-size: 11px; color: var(--muted); }
+
+  /* Main */
+  .main { padding: 32px 36px; }
+  .page-header { margin-bottom: 28px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .page-title { font-family: 'Playfair Display', serif; font-size: 28px; letter-spacing: -0.3px; }
+  .page-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+  .header-actions { display: flex; gap: 10px; }
+  .btn { padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; font-family: 'Source Sans 3', sans-serif; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+
+  /* Stats */
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
+  .stat-label { font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 8px; }
+  .stat-value { font-family: 'Playfair Display', serif; font-size: 30px; line-height: 1; }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+  .stat.blue { border-top: 2px solid var(--accent); }
+  .stat.green { border-top: 2px solid var(--green); }
+  .stat.amber { border-top: 2px solid var(--amber); }
+  .stat.red { border-top: 2px solid var(--red); }
+
+  /* Layout */
+  .grid { display: grid; grid-template-columns: 1fr 340px; gap: 20px; }
+
+  /* Cards */
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 18px; }
+  .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 14px; font-weight: 500; }
+  .card-action { font-size: 12px; color: var(--accent); cursor: pointer; }
+
+  /* Course cards */
+  .course-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; padding: 16px; }
+  .course-card { background: var(--surface2); border: 1px solid var(--border); border-radius: 8px; padding: 16px; cursor: pointer; transition: border-color 0.15s; }
+  .course-card:hover { border-color: var(--accent); }
+  .course-tag { font-size: 11px; font-weight: 600; color: var(--accent); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 6px; }
+  .course-name { font-size: 14px; font-weight: 500; margin-bottom: 4px; }
+  .course-meta { font-size: 11px; color: var(--muted); }
+  .course-stats { display: flex; gap: 16px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+  .cs-item { text-align: center; }
+  .cs-val { font-size: 16px; font-weight: 600; color: var(--text); }
+  .cs-lbl { font-size: 10px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.5px; }
+
+  /* Grade table */
+  .grade-table { width: 100%; border-collapse: collapse; }
+  .grade-table th { text-align: left; padding: 10px 16px; font-size: 11px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--surface2); }
+  .grade-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .grade-table tr:last-child td { border-bottom: none; }
+  .grade-table tr:hover td { background: var(--surface2); }
+  .student-name { font-weight: 500; }
+  .student-id { font-size: 11px; color: var(--muted); }
+  .grade-input { background: var(--surface2); border: 1px solid var(--border); border-radius: 5px; padding: 5px 10px; color: var(--text); font-size: 13px; font-family: 'Source Sans 3', sans-serif; width: 70px; text-align: center; }
+  .grade-input:focus { outline: none; border-color: var(--accent); }
+  .status-dot { width: 7px; height: 7px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .dot-green { background: var(--green); }
+  .dot-amber { background: var(--amber); }
+  .dot-red { background: var(--red); }
+
+  /* Pending items */
+  .pending-item { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; gap: 12px; }
+  .pending-item:last-child { border-bottom: none; }
+  .pending-icon { width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+  .pi-amber { background: var(--amber-dim); }
+  .pi-red { background: var(--red-dim); }
+  .pi-green { background: var(--green-dim); }
+  .pending-title { font-size: 13px; font-weight: 500; }
+  .pending-sub { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .pending-time { font-size: 11px; color: var(--muted); margin-left: auto; flex-shrink: 0; }
+
+  /* Grade dist */
+  .dist-row { display: flex; align-items: center; gap: 10px; padding: 8px 20px; }
+  .dist-label { font-size: 13px; font-weight: 600; width: 20px; color: var(--text); }
+  .dist-bar-wrap { flex: 1; height: 6px; background: var(--surface2); border-radius: 3px; overflow: hidden; }
+  .dist-fill { height: 100%; border-radius: 3px; }
+  .dist-count { font-size: 11px; color: var(--muted); width: 24px; text-align: right; }
+
+  .section-label { font-size: 12px; color: var(--muted); padding: 10px 20px 4px; font-weight: 500; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">CourseSync</div>
+      <div class="brand-role">Faculty Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Teaching</div>
+      <a class="nav-item active" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        My Courses
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+        Class Rosters
+      </a>
+      <div class="nav-section">Grading</div>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        Grade Entry
+        <span class="badge">12</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Analytics
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Grade Submissions
+      </a>
+      <div class="nav-section">Admin</div>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Office Hours
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        Messages
+        <span class="badge">3</span>
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">RN</div>
+        <div>
+          <div class="user-name">Dr. R. Nakamura</div>
+          <div class="user-title">Associate Professor, CS</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Faculty Dashboard</div>
+        <div class="page-sub">Spring 2025 · 3 active courses · 187 students</div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost">Export Grades</button>
+        <button class="btn btn-primary">Submit Final Grades</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat blue">
+        <div class="stat-label">Total Students</div>
+        <div class="stat-value">187</div>
+        <div class="stat-sub">across 3 courses</div>
+      </div>
+      <div class="stat green">
+        <div class="stat-label">Avg Class GPA</div>
+        <div class="stat-value">3.18</div>
+        <div class="stat-sub">+0.12 vs last semester</div>
+      </div>
+      <div class="stat amber">
+        <div class="stat-label">Grades Pending</div>
+        <div class="stat-value">12</div>
+        <div class="stat-sub">Due by Apr 20</div>
+      </div>
+      <div class="stat red">
+        <div class="stat-label">At-Risk Students</div>
+        <div class="stat-value">4</div>
+        <div class="stat-sub">Below 2.0 in course</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <!-- Courses -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">My Courses</span>
+            <span class="card-action">Manage all →</span>
+          </div>
+          <div class="course-grid">
+            <div class="course-card">
+              <div class="course-tag">CS 3410</div>
+              <div class="course-name">Data Structures & Algorithms</div>
+              <div class="course-meta">TR 9:30–10:45 · Gates 114</div>
+              <div class="course-stats">
+                <div class="cs-item"><div class="cs-val">68</div><div class="cs-lbl">Students</div></div>
+                <div class="cs-item"><div class="cs-val" style="color:var(--green)">3.24</div><div class="cs-lbl">Avg GPA</div></div>
+                <div class="cs-item"><div class="cs-val" style="color:var(--amber)">5</div><div class="cs-lbl">Pending</div></div>
+              </div>
+            </div>
+            <div class="course-card">
+              <div class="course-tag">CS 4850</div>
+              <div class="course-name">Machine Learning</div>
+              <div class="course-meta">MWF 11:00–11:50 · Upson 205</div>
+              <div class="course-stats">
+                <div class="cs-item"><div class="cs-val">42</div><div class="cs-lbl">Students</div></div>
+                <div class="cs-item"><div class="cs-val" style="color:var(--green)">3.41</div><div class="cs-lbl">Avg GPA</div></div>
+                <div class="cs-item"><div class="cs-val" style="color:var(--amber)">4</div><div class="cs-lbl">Pending</div></div>
+              </div>
+            </div>
+            <div class="course-card" style="grid-column: span 2;">
+              <div class="course-tag">CS 6780</div>
+              <div class="course-name">Advanced AI — Graduate Seminar</div>
+              <div class="course-meta">W 2:00–4:45 · Gates 310 · Graduate level</div>
+              <div class="course-stats">
+                <div class="cs-item"><div class="cs-val">18</div><div class="cs-lbl">Students</div></div>
+                <div class="cs-item"><div class="cs-val" style="color:var(--green)">3.72</div><div class="cs-lbl">Avg GPA</div></div>
+                <div class="cs-item"><div class="cs-val" style="color:var(--red)">3</div><div class="cs-lbl">Pending</div></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grade entry -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Grade Entry — CS 3410 · Midterm 2</span>
+            <span class="card-action">Open full gradebook →</span>
+          </div>
+          <table class="grade-table">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>ID</th>
+                <th>Midterm 1</th>
+                <th>Midterm 2</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="student-name">Jordan Martinez</div></td>
+                <td><div class="student-id">STU-2024-0847</div></td>
+                <td>88</td>
+                <td><input class="grade-input" type="text" placeholder="—" value="91"/></td>
+                <td><span class="status-dot dot-green"></span>Graded</td>
+              </tr>
+              <tr>
+                <td><div class="student-name">Priya Sharma</div></td>
+                <td><div class="student-id">STU-2024-1023</div></td>
+                <td>92</td>
+                <td><input class="grade-input" type="text" placeholder="—"/></td>
+                <td><span class="status-dot dot-amber"></span>Pending</td>
+              </tr>
+              <tr>
+                <td><div class="student-name">Marcus Webb</div></td>
+                <td><div class="student-id">STU-2023-0341</div></td>
+                <td>71</td>
+                <td><input class="grade-input" type="text" placeholder="—"/></td>
+                <td><span class="status-dot dot-amber"></span>Pending</td>
+              </tr>
+              <tr>
+                <td><div class="student-name">Aisha Johnson</div></td>
+                <td><div class="student-id">STU-2024-2201</div></td>
+                <td>55</td>
+                <td><input class="grade-input" type="text" placeholder="—"/></td>
+                <td><span class="status-dot dot-red"></span>At risk</td>
+              </tr>
+              <tr>
+                <td><div class="student-name">Theo Okonkwo</div></td>
+                <td><div class="student-id">STU-2023-0788</div></td>
+                <td>84</td>
+                <td><input class="grade-input" type="text" placeholder="—" value="87"/></td>
+                <td><span class="status-dot dot-green"></span>Graded</td>
+              </tr>
+            </tbody>
+          </table>
+          <div style="padding: 14px 16px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border);">
+            <button class="btn btn-ghost">Save Draft</button>
+            <button class="btn btn-primary">Submit Grades</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div>
+        <!-- Action Items -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">Action Items</span></div>
+          <div class="pending-item">
+            <div class="pending-icon pi-red"><svg width="16" height="16" fill="none" stroke="var(--red)" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div>
+            <div>
+              <div class="pending-title">Final grades due</div>
+              <div class="pending-sub">CS 3410 · 12 students ungraded</div>
+            </div>
+            <div class="pending-time">5 days</div>
+          </div>
+          <div class="pending-item">
+            <div class="pending-icon pi-amber"><svg width="16" height="16" fill="none" stroke="var(--amber)" stroke-width="1.8" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></div>
+            <div>
+              <div class="pending-title">At-risk: Aisha Johnson</div>
+              <div class="pending-sub">Below 60% — consider outreach</div>
+            </div>
+            <div class="pending-time">Now</div>
+          </div>
+          <div class="pending-item">
+            <div class="pending-icon pi-green"><svg width="16" height="16" fill="none" stroke="var(--green)" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg></div>
+            <div>
+              <div class="pending-title">Course eval forms open</div>
+              <div class="pending-sub">All 3 courses · Closes Apr 28</div>
+            </div>
+            <div class="pending-time">13 days</div>
+          </div>
+          <div class="pending-item">
+            <div class="pending-icon pi-amber"><svg width="16" height="16" fill="none" stroke="var(--amber)" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div>
+            <div>
+              <div class="pending-title">3 unread messages</div>
+              <div class="pending-sub">Students in CS 4850</div>
+            </div>
+            <div class="pending-time">1h ago</div>
+          </div>
+        </div>
+
+        <!-- Grade distribution -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">Grade Distribution — CS 3410</span></div>
+          <div style="padding: 12px 0 8px;">
+            <div class="dist-row"><span class="dist-label">A</span><div class="dist-bar-wrap"><div class="dist-fill" style="width:55%;background:var(--green)"></div></div><span class="dist-count">22</span></div>
+            <div class="dist-row"><span class="dist-label">B</span><div class="dist-bar-wrap"><div class="dist-fill" style="width:30%;background:var(--accent)"></div></div><span class="dist-count">18</span></div>
+            <div class="dist-row"><span class="dist-label">C</span><div class="dist-bar-wrap"><div class="dist-fill" style="width:18%;background:var(--amber)"></div></div><span class="dist-count">11</span></div>
+            <div class="dist-row"><span class="dist-label">D</span><div class="dist-bar-wrap"><div class="dist-fill" style="width:8%;background:var(--red)"></div></div><span class="dist-count">4</span></div>
+            <div class="dist-row"><span class="dist-label">F</span><div class="dist-bar-wrap"><div class="dist-fill" style="width:3%;background:var(--red)"></div></div><span class="dist-count">1</span></div>
+          </div>
+        </div>
+
+        <!-- Upcoming -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">This Week</span></div>
+          <div class="pending-item">
+            <div style="width:36px;text-align:center;flex-shrink:0"><div style="font-size:11px;color:var(--muted)">TUE</div><div style="font-size:18px;font-family:'Playfair Display',serif;">15</div></div>
+            <div><div class="pending-title">CS 3410 — Lecture</div><div class="pending-sub">9:30 AM · Gates 114</div></div>
+          </div>
+          <div class="pending-item">
+            <div style="width:36px;text-align:center;flex-shrink:0"><div style="font-size:11px;color:var(--muted)">WED</div><div style="font-size:18px;font-family:'Playfair Display',serif;">16</div></div>
+            <div><div class="pending-title">CS 6780 — Seminar</div><div class="pending-sub">2:00 PM · Gates 310</div></div>
+          </div>
+          <div class="pending-item">
+            <div style="width:36px;text-align:center;flex-shrink:0"><div style="font-size:11px;color:var(--muted)">THU</div><div style="font-size:18px;font-family:'Playfair Display',serif;">17</div></div>
+            <div><div class="pending-title">Office Hours</div><div class="pending-sub">3:00–5:00 PM · Gates 418</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Registrar Portal — CourseSync</title>
+<link href="https://fonts.googleapis.com/css2?family=Sora:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #FAFAFA;
+    --surface: #FFFFFF;
+    --surface2: #F4F4F6;
+    --border: #E8E8EC;
+    --text: #18181C;
+    --muted: #72727C;
+    --accent: #5B4FE8;
+    --accent-light: #F0EFFE;
+    --green: #18A449;
+    --green-light: #EAFAF1;
+    --amber: #C07B18;
+    --amber-light: #FEF8EC;
+    --red: #D63B3B;
+    --red-light: #FEF0F0;
+    --radius: 10px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Sora', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 13.5px; }
+
+  .shell { display: grid; grid-template-columns: 240px 1fr; min-height: 100vh; }
+
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
+  .brand { padding: 22px 20px; border-bottom: 1px solid var(--border); }
+  .brand-mark { font-size: 18px; font-weight: 600; color: var(--accent); letter-spacing: -0.5px; }
+  .brand-role { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; }
+  .nav { padding: 16px 12px; flex: 1; }
+  .nav-section { font-size: 10px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 1.2px; padding: 0 8px; margin: 16px 0 6px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 7px; color: var(--muted); font-size: 13px; cursor: pointer; transition: all 0.15s; text-decoration: none; margin-bottom: 1px; }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
+  .nav-icon { width: 15px; height: 15px; flex-shrink: 0; }
+  .badge { background: var(--red); color: white; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 10px; margin-left: auto; }
+  .badge-amber { background: var(--amber); }
+  .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
+  .user-card { display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 34px; height: 34px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 600; color: var(--accent); }
+  .user-name { font-size: 13px; font-weight: 500; }
+  .user-title { font-size: 11px; color: var(--muted); }
+
+  .main { padding: 30px 36px; }
+  .page-header { margin-bottom: 24px; display: flex; justify-content: space-between; align-items: flex-end; }
+  .page-title { font-size: 24px; font-weight: 600; letter-spacing: -0.5px; }
+  .page-sub { font-size: 12px; color: var(--muted); margin-top: 3px; }
+  .header-actions { display: flex; gap: 8px; }
+  .btn { padding: 8px 16px; border-radius: 7px; font-size: 12.5px; font-weight: 500; cursor: pointer; border: none; font-family: 'Sora', sans-serif; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-ghost { background: var(--surface); color: var(--text); border: 1px solid var(--border); }
+  .btn-danger { background: var(--red-light); color: var(--red); border: 1px solid #F5C5C5; }
+  .btn-success { background: var(--green-light); color: var(--green); border: 1px solid #B5E8C5; }
+  .btn-sm { padding: 5px 10px; font-size: 11.5px; }
+
+  .stats { display: grid; grid-template-columns: repeat(5, 1fr); gap: 12px; margin-bottom: 24px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; }
+  .stat-label { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 6px; }
+  .stat-value { font-size: 26px; font-weight: 600; letter-spacing: -1px; }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .c-accent { color: var(--accent); }
+  .c-green { color: var(--green); }
+  .c-amber { color: var(--amber); }
+  .c-red { color: var(--red); }
+
+  .tabs { display: flex; gap: 2px; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .tab { padding: 10px 18px; font-size: 13px; cursor: pointer; color: var(--muted); border-bottom: 2px solid transparent; margin-bottom: -1px; font-weight: 400; }
+  .tab.active { color: var(--accent); border-color: var(--accent); font-weight: 500; }
+
+  /* Main table layout */
+  .content-grid { display: grid; grid-template-columns: 1fr 300px; gap: 18px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 16px; }
+  .card-header { padding: 15px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 13.5px; font-weight: 500; }
+  .card-action { font-size: 12px; color: var(--accent); cursor: pointer; }
+
+  /* Enrollment table */
+  .enroll-table { width: 100%; border-collapse: collapse; }
+  .enroll-table th { text-align: left; padding: 9px 14px; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--surface2); }
+  .enroll-table td { padding: 11px 14px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+  .enroll-table tr:last-child td { border-bottom: none; }
+  .enroll-table tr:hover td { background: #FAFAFA; }
+  .stu-name { font-weight: 500; }
+  .stu-meta { font-size: 11px; color: var(--muted); }
+  .status-pill { display: inline-block; padding: 3px 9px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+  .pill-pending { background: var(--amber-light); color: var(--amber); }
+  .pill-approved { background: var(--green-light); color: var(--green); }
+  .pill-denied { background: var(--red-light); color: var(--red); }
+  .pill-hold { background: var(--accent-light); color: var(--accent); }
+  .actions { display: flex; gap: 6px; }
+
+  /* Capacity */
+  .course-cap { padding: 12px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
+  .course-cap:last-child { border-bottom: none; }
+  .cap-code { font-size: 11px; font-weight: 600; color: var(--accent); width: 60px; }
+  .cap-name { flex: 1; font-size: 13px; font-weight: 500; }
+  .cap-bar-wrap { width: 100px; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+  .cap-fill { height: 100%; border-radius: 3px; }
+  .fill-green { background: var(--green); }
+  .fill-amber { background: var(--amber); }
+  .fill-red { background: var(--red); }
+  .cap-num { font-size: 12px; color: var(--muted); width: 60px; text-align: right; }
+
+  /* Academic calendar */
+  .cal-item { padding: 11px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
+  .cal-item:last-child { border-bottom: none; }
+  .cal-date { font-size: 12px; color: var(--muted); width: 64px; flex-shrink: 0; }
+  .cal-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .cal-event { font-size: 13px; font-weight: 500; }
+  .cal-sub { font-size: 11px; color: var(--muted); }
+
+  /* Holds */
+  .hold-item { padding: 11px 18px; border-bottom: 1px solid var(--border); display: flex; align-items: flex-start; justify-content: space-between; gap: 12px; }
+  .hold-item:last-child { border-bottom: none; }
+  .hold-name { font-size: 13px; font-weight: 500; }
+  .hold-reason { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .hold-type { font-size: 11px; background: var(--red-light); color: var(--red); padding: 2px 8px; border-radius: 10px; font-weight: 500; flex-shrink: 0; }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">CourseSync</div>
+      <div class="brand-role">Registrar Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Operations</div>
+      <a class="nav-item active" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
+        Enrollment Queue
+        <span class="badge">14</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Course Catalog
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+        Student Records
+      </a>
+      <div class="nav-section">Administration</div>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
+        Holds Management
+        <span class="badge badge-amber">7</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Academic Calendar
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Transcripts
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Reports
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">KP</div>
+        <div>
+          <div class="user-name">Katherine Park</div>
+          <div class="user-title">University Registrar</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Registrar Dashboard</div>
+        <div class="page-sub">Spring 2025 · Enrollment period active · Fall 2025 opens Apr 27</div>
+      </div>
+      <div class="header-actions">
+        <button class="btn btn-ghost">Generate Report</button>
+        <button class="btn btn-primary">+ Add Course Section</button>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="stat-label">Total Enrollment</div>
+        <div class="stat-value c-accent">4,812</div>
+        <div class="stat-sub">Active students</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Pending Requests</div>
+        <div class="stat-value c-amber">14</div>
+        <div class="stat-sub">Awaiting action</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Active Holds</div>
+        <div class="stat-value c-red">7</div>
+        <div class="stat-sub">Blocking enrollment</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Course Sections</div>
+        <div class="stat-value">312</div>
+        <div class="stat-sub">Spring 2025</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Capacity Used</div>
+        <div class="stat-value c-green">84%</div>
+        <div class="stat-sub">avg across sections</div>
+      </div>
+    </div>
+
+    <div class="tabs">
+      <div class="tab active">Enrollment Queue</div>
+      <div class="tab">Course Sections</div>
+      <div class="tab">Student Records</div>
+      <div class="tab">Grade Submissions</div>
+    </div>
+
+    <div class="content-grid">
+      <div>
+        <!-- Enrollment queue -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Pending Enrollment Requests</span>
+            <span class="card-action">Bulk approve →</span>
+          </div>
+          <table class="enroll-table">
+            <thead>
+              <tr>
+                <th>Student</th>
+                <th>Course</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><div class="stu-name">Jordan Martinez</div><div class="stu-meta">STU-2024-0847 · Junior</div></td>
+                <td><div style="font-weight:500">CS 4820</div><div class="stu-meta">Algorithms · 3 cr</div></td>
+                <td>Add</td>
+                <td><span class="status-pill pill-pending">Pending</span></td>
+                <td class="actions">
+                  <button class="btn btn-success btn-sm">Approve</button>
+                  <button class="btn btn-danger btn-sm">Deny</button>
+                </td>
+              </tr>
+              <tr>
+                <td><div class="stu-name">Lena Fischer</div><div class="stu-meta">STU-2025-0104 · Freshman</div></td>
+                <td><div style="font-weight:500">CS 4850</div><div class="stu-meta">Machine Learning · 3 cr</div></td>
+                <td>Override</td>
+                <td><span class="status-pill pill-pending">Pending</span></td>
+                <td class="actions">
+                  <button class="btn btn-success btn-sm">Approve</button>
+                  <button class="btn btn-danger btn-sm">Deny</button>
+                </td>
+              </tr>
+              <tr>
+                <td><div class="stu-name">Marcus Webb</div><div class="stu-meta">STU-2023-0341 · Senior</div></td>
+                <td><div style="font-weight:500">CS 4320</div><div class="stu-meta">Database Systems · 3 cr</div></td>
+                <td>Late add</td>
+                <td><span class="status-pill pill-pending">Pending</span></td>
+                <td class="actions">
+                  <button class="btn btn-success btn-sm">Approve</button>
+                  <button class="btn btn-danger btn-sm">Deny</button>
+                </td>
+              </tr>
+              <tr>
+                <td><div class="stu-name">Sara Kim</div><div class="stu-meta">STU-2024-0633 · Junior</div></td>
+                <td><div style="font-weight:500">ENG 3150</div><div class="stu-meta">Technical Writing · 3 cr</div></td>
+                <td>Drop</td>
+                <td><span class="status-pill pill-approved">Approved</span></td>
+                <td class="actions">
+                  <button class="btn btn-ghost btn-sm">View</button>
+                </td>
+              </tr>
+              <tr>
+                <td><div class="stu-name">Theo Okonkwo</div><div class="stu-meta">STU-2023-0788 · Senior</div></td>
+                <td><div style="font-weight:500">CS 6780</div><div class="stu-meta">Advanced AI · 3 cr</div></td>
+                <td>Override</td>
+                <td><span class="status-pill pill-denied">Denied</span></td>
+                <td class="actions">
+                  <button class="btn btn-ghost btn-sm">View</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Course capacities -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Section Capacity — Spring 2025</span>
+            <span class="card-action">All sections →</span>
+          </div>
+          <div class="course-cap">
+            <span class="cap-code">CS 1110</span>
+            <span class="cap-name">Intro to Computing</span>
+            <div class="cap-bar-wrap"><div class="cap-fill fill-red" style="width:98%"></div></div>
+            <span class="cap-num c-red">248/250</span>
+          </div>
+          <div class="course-cap">
+            <span class="cap-code">CS 3410</span>
+            <span class="cap-name">Data Structures & Algorithms</span>
+            <div class="cap-bar-wrap"><div class="cap-fill fill-amber" style="width:79%"></div></div>
+            <span class="cap-num c-amber">68/86</span>
+          </div>
+          <div class="course-cap">
+            <span class="cap-code">CS 4850</span>
+            <span class="cap-name">Machine Learning</span>
+            <div class="cap-bar-wrap"><div class="cap-fill fill-green" style="width:61%"></div></div>
+            <span class="cap-num c-green">42/68</span>
+          </div>
+          <div class="course-cap">
+            <span class="cap-code">CS 4320</span>
+            <span class="cap-name">Database Systems</span>
+            <div class="cap-bar-wrap"><div class="cap-fill fill-green" style="width:55%"></div></div>
+            <span class="cap-num c-green">44/80</span>
+          </div>
+          <div class="course-cap">
+            <span class="cap-code">CS 6780</span>
+            <span class="cap-name">Advanced AI — Grad</span>
+            <div class="cap-bar-wrap"><div class="cap-fill fill-amber" style="width:72%"></div></div>
+            <span class="cap-num c-amber">18/25</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div>
+        <!-- Holds -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">Active Enrollment Holds</span></div>
+          <div class="hold-item">
+            <div><div class="hold-name">Aisha Johnson</div><div class="hold-reason">Academic probation hold</div></div>
+            <span class="hold-type">Academic</span>
+          </div>
+          <div class="hold-item">
+            <div><div class="hold-name">Lena Fischer</div><div class="hold-reason">Unpaid balance — $1,240</div></div>
+            <span class="hold-type">Financial</span>
+          </div>
+          <div class="hold-item">
+            <div><div class="hold-name">Chris Patel</div><div class="hold-reason">Missing immunization records</div></div>
+            <span class="hold-type">Health</span>
+          </div>
+          <div class="hold-item">
+            <div><div class="hold-name">Anna Bergström</div><div class="hold-reason">International student I-20 update</div></div>
+            <span class="hold-type">Admin</span>
+          </div>
+          <div style="padding: 12px 14px; border-top: 1px solid var(--border);">
+            <button class="btn btn-ghost" style="width:100%;font-size:12px;">Manage all holds →</button>
+          </div>
+        </div>
+
+        <!-- Academic Calendar -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">Upcoming Deadlines</span></div>
+          <div class="cal-item">
+            <div class="cal-date">Apr 18</div>
+            <div class="cal-dot" style="background:var(--red)"></div>
+            <div><div class="cal-event">Final withdrawal deadline</div><div class="cal-sub">W grade assigned after this date</div></div>
+          </div>
+          <div class="cal-item">
+            <div class="cal-date">Apr 20</div>
+            <div class="cal-dot" style="background:var(--amber)"></div>
+            <div><div class="cal-event">Grade submission deadline</div><div class="cal-sub">Faculty final grade entry</div></div>
+          </div>
+          <div class="cal-item">
+            <div class="cal-date">Apr 27</div>
+            <div class="cal-dot" style="background:var(--accent)"></div>
+            <div><div class="cal-event">Fall 2025 enrollment opens</div><div class="cal-sub">Priority: Seniors first</div></div>
+          </div>
+          <div class="cal-item">
+            <div class="cal-date">May 10</div>
+            <div class="cal-dot" style="background:var(--green)"></div>
+            <div><div class="cal-event">Commencement — Spring 2025</div><div class="cal-sub">312 candidates eligible</div></div>
+          </div>
+          <div class="cal-item">
+            <div class="cal-date">May 15</div>
+            <div class="cal-dot" style="background:var(--muted)"></div>
+            <div><div class="cal-event">Transcripts available</div><div class="cal-sub">Post-semester processing complete</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

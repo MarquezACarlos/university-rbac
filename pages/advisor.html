@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Advisor Portal — CourseSync</title>
+<link href="https://fonts.googleapis.com/css2?family=Libre+Baskerville:ital,wght@0,400;0,700;1,400&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #F8F6F1;
+    --surface: #FFFFFF;
+    --surface2: #F2EFE8;
+    --border: #E5E0D8;
+    --text: #1E1C18;
+    --muted: #7C7870;
+    --accent: #4A6FA5;
+    --accent-light: #EBF1FA;
+    --green: #3A7D5E;
+    --green-light: #E8F4EE;
+    --amber: #C47A1A;
+    --amber-light: #FEF5E4;
+    --red: #B84040;
+    --red-light: #FAEAEA;
+    --radius: 10px;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+
+  .shell { display: grid; grid-template-columns: 230px 1fr; min-height: 100vh; }
+
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; }
+  .brand { padding: 24px 20px; border-bottom: 1px solid var(--border); }
+  .brand-mark { font-family: 'Libre Baskerville', serif; font-size: 19px; color: var(--accent); }
+  .brand-role { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-top: 3px; }
+  .nav { padding: 16px 12px; flex: 1; }
+  .nav-section { font-size: 10px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 1.2px; padding: 0 8px; margin: 16px 0 6px; }
+  .nav-item { display: flex; align-items: center; gap: 10px; padding: 9px 10px; border-radius: 7px; color: var(--muted); font-size: 13px; cursor: pointer; transition: all 0.15s; text-decoration: none; margin-bottom: 1px; }
+  .nav-item:hover { background: var(--surface2); color: var(--text); }
+  .nav-item.active { background: var(--accent-light); color: var(--accent); font-weight: 500; }
+  .nav-icon { width: 16px; height: 16px; flex-shrink: 0; }
+  .notif { background: var(--red); color: white; font-size: 10px; font-weight: 600; padding: 1px 6px; border-radius: 10px; margin-left: auto; }
+  .sidebar-footer { padding: 16px; border-top: 1px solid var(--border); }
+  .user-card { display: flex; align-items: center; gap: 10px; }
+  .avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--accent-light); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; color: var(--accent); flex-shrink: 0; }
+  .user-name { font-size: 13px; font-weight: 500; }
+  .user-title { font-size: 11px; color: var(--muted); }
+
+  .main { padding: 32px 36px; }
+  .page-header { margin-bottom: 28px; }
+  .page-title { font-family: 'Libre Baskerville', serif; font-size: 27px; color: var(--text); }
+  .page-sub { font-size: 13px; color: var(--muted); margin-top: 4px; }
+
+  .stats { display: grid; grid-template-columns: repeat(4, 1fr); gap: 14px; margin-bottom: 28px; }
+  .stat { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px 20px; }
+  .stat-label { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); margin-bottom: 6px; }
+  .stat-value { font-family: 'Libre Baskerville', serif; font-size: 28px; }
+  .stat-sub { font-size: 11px; color: var(--muted); margin-top: 3px; }
+  .stat.flag { border-left: 3px solid var(--red); }
+  .stat.ok { border-left: 3px solid var(--green); }
+
+  .grid { display: grid; grid-template-columns: 1fr 320px; gap: 20px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); margin-bottom: 18px; }
+  .card-header { padding: 16px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; justify-content: space-between; }
+  .card-title { font-size: 14px; font-weight: 500; }
+  .card-action { font-size: 12px; color: var(--accent); cursor: pointer; }
+
+  /* Search bar */
+  .search-bar { padding: 14px 20px; border-bottom: 1px solid var(--border); display: flex; gap: 10px; }
+  .search-input { flex: 1; padding: 8px 12px; border: 1px solid var(--border); border-radius: 7px; font-size: 13px; font-family: 'IBM Plex Sans', sans-serif; background: var(--bg); color: var(--text); }
+  .search-input:focus { outline: none; border-color: var(--accent); }
+  .filter-btn { padding: 8px 14px; background: var(--surface2); border: 1px solid var(--border); border-radius: 7px; font-size: 12px; cursor: pointer; color: var(--muted); font-family: 'IBM Plex Sans', sans-serif; }
+
+  /* Student list */
+  .student-row { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; align-items: center; padding: 13px 20px; border-bottom: 1px solid var(--border); gap: 12px; cursor: pointer; }
+  .student-row:last-child { border-bottom: none; }
+  .student-row:hover { background: var(--surface2); }
+  .stu-col-header { display: grid; grid-template-columns: 2fr 1fr 1fr 1fr 1fr; padding: 10px 20px; border-bottom: 1px solid var(--border); background: var(--surface2); gap: 12px; }
+  .col-lbl { font-size: 11px; font-weight: 500; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); }
+  .stu-name { font-size: 13px; font-weight: 500; }
+  .stu-major { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .flag-pill { display: inline-flex; align-items: center; gap: 4px; padding: 3px 9px; border-radius: 12px; font-size: 11px; font-weight: 500; }
+  .pill-red { background: var(--red-light); color: var(--red); }
+  .pill-amber { background: var(--amber-light); color: var(--amber); }
+  .pill-green { background: var(--green-light); color: var(--green); }
+  .gpa-val { font-weight: 500; }
+  .gpa-low { color: var(--red); }
+  .gpa-mid { color: var(--amber); }
+  .gpa-good { color: var(--green); }
+
+  /* Appointment slots */
+  .appt-item { padding: 13px 20px; border-bottom: 1px solid var(--border); display: flex; align-items: center; gap: 14px; }
+  .appt-item:last-child { border-bottom: none; }
+  .appt-time { text-align: center; width: 44px; flex-shrink: 0; }
+  .appt-time-main { font-family: 'Libre Baskerville', serif; font-size: 15px; }
+  .appt-time-ampm { font-size: 10px; color: var(--muted); }
+  .appt-divider { width: 1px; height: 36px; background: var(--border); }
+  .appt-name { font-size: 13px; font-weight: 500; }
+  .appt-topic { font-size: 11px; color: var(--muted); margin-top: 2px; }
+  .appt-type { font-size: 11px; margin-left: auto; }
+  .type-in { color: var(--accent); }
+  .type-virtual { color: var(--green); }
+  .appt-empty { color: var(--muted); font-size: 13px; font-style: italic; }
+
+  /* Degree audit card */
+  .audit-section { padding: 8px 20px 14px; border-bottom: 1px solid var(--border); }
+  .audit-section:last-child { border-bottom: none; }
+  .audit-category { font-size: 12px; font-weight: 500; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin-bottom: 8px; margin-top: 8px; }
+  .audit-req { display: flex; align-items: center; justify-content: space-between; margin-bottom: 5px; font-size: 13px; }
+  .req-check { color: var(--green); font-size: 13px; }
+  .req-x { color: var(--red); font-size: 13px; }
+  .req-partial { color: var(--amber); font-size: 13px; }
+
+  /* Notes */
+  .note-item { padding: 13px 20px; border-bottom: 1px solid var(--border); }
+  .note-item:last-child { border-bottom: none; }
+  .note-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
+  .note-student { font-size: 13px; font-weight: 500; }
+  .note-date { font-size: 11px; color: var(--muted); }
+  .note-text { font-size: 12px; color: var(--muted); line-height: 1.5; }
+
+  .btn { padding: 8px 16px; border-radius: 7px; font-size: 13px; font-weight: 500; cursor: pointer; border: none; font-family: 'IBM Plex Sans', sans-serif; }
+  .btn-primary { background: var(--accent); color: white; }
+  .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+</style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">CourseSync</div>
+      <div class="brand-role">Advisor Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Overview</div>
+      <a class="nav-item active" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+        My Students
+        <span class="notif">2</span>
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
+        Appointments
+      </a>
+      <div class="nav-section">Academic</div>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Degree Audits
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Course Catalog
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        At-Risk Reports
+        <span class="notif">4</span>
+      </a>
+      <div class="nav-section">Tools</div>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
+        Messages
+      </a>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
+        Advising Notes
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">SL</div>
+        <div>
+          <div class="user-name">Sandra Lee, M.Ed.</div>
+          <div class="user-title">Academic Advisor · CS Dept.</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">Advising Dashboard</div>
+      <div class="page-sub">Spring 2025 · 42 advisees · 4 flagged students</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat ok">
+        <div class="stat-label">Total Advisees</div>
+        <div class="stat-value">42</div>
+        <div class="stat-sub">Computer Science major</div>
+      </div>
+      <div class="stat flag">
+        <div class="stat-label">Flagged / At-Risk</div>
+        <div class="stat-value">4</div>
+        <div class="stat-sub">Requires outreach</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Today's Appointments</div>
+        <div class="stat-value">5</div>
+        <div class="stat-sub">Next at 10:00 AM</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Holds to Review</div>
+        <div class="stat-value">3</div>
+        <div class="stat-sub">Enrollment holds</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div>
+        <!-- Student roster -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">My Advisees</span>
+            <span class="card-action">Export list →</span>
+          </div>
+          <div class="search-bar">
+            <input class="search-input" type="text" placeholder="Search by name, ID, or major…">
+            <button class="filter-btn">Filter ▾</button>
+            <button class="filter-btn">Sort ▾</button>
+          </div>
+          <div class="stu-col-header">
+            <span class="col-lbl">Student</span>
+            <span class="col-lbl">Year</span>
+            <span class="col-lbl">GPA</span>
+            <span class="col-lbl">Credits</span>
+            <span class="col-lbl">Status</span>
+          </div>
+          <div class="student-row">
+            <div><div class="stu-name">Jordan Martinez</div><div class="stu-major">CS · STU-2024-0847</div></div>
+            <div>Junior</div>
+            <div class="gpa-val gpa-good">3.62</div>
+            <div>78</div>
+            <div><span class="flag-pill pill-green">Good standing</span></div>
+          </div>
+          <div class="student-row">
+            <div><div class="stu-name">Aisha Johnson</div><div class="stu-major">CS · STU-2024-2201</div></div>
+            <div>Sophomore</div>
+            <div class="gpa-val gpa-low">1.88</div>
+            <div>31</div>
+            <div><span class="flag-pill pill-red">⚑ At-risk</span></div>
+          </div>
+          <div class="student-row">
+            <div><div class="stu-name">Marcus Webb</div><div class="stu-major">CS · STU-2023-0341</div></div>
+            <div>Senior</div>
+            <div class="gpa-val gpa-mid">2.41</div>
+            <div>104</div>
+            <div><span class="flag-pill pill-amber">Probation</span></div>
+          </div>
+          <div class="student-row">
+            <div><div class="stu-name">Priya Sharma</div><div class="stu-major">CS · STU-2024-1023</div></div>
+            <div>Junior</div>
+            <div class="gpa-val gpa-good">3.85</div>
+            <div>82</div>
+            <div><span class="flag-pill pill-green">Dean's List</span></div>
+          </div>
+          <div class="student-row">
+            <div><div class="stu-name">Theo Okonkwo</div><div class="stu-major">CS · STU-2023-0788</div></div>
+            <div>Senior</div>
+            <div class="gpa-val gpa-mid">2.78</div>
+            <div>112</div>
+            <div><span class="flag-pill pill-green">Good standing</span></div>
+          </div>
+          <div class="student-row">
+            <div><div class="stu-name">Lena Fischer</div><div class="stu-major">CS · STU-2025-0104</div></div>
+            <div>Freshman</div>
+            <div class="gpa-val gpa-low">1.60</div>
+            <div>14</div>
+            <div><span class="flag-pill pill-red">⚑ At-risk</span></div>
+          </div>
+          <div style="padding: 12px 20px; display: flex; justify-content: center; border-top: 1px solid var(--border);">
+            <button class="btn btn-ghost" style="font-size:12px;">View all 42 students →</button>
+          </div>
+        </div>
+
+        <!-- Degree Audit preview -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Degree Audit — Jordan Martinez</span>
+            <span class="card-action">Full audit →</span>
+          </div>
+          <div class="audit-section">
+            <div class="audit-category">Core Requirements</div>
+            <div class="audit-req"><span>CS 1110 — Intro to Computing</span><span class="req-check">✓ Complete</span></div>
+            <div class="audit-req"><span>CS 2110 — OOP & Data Structures</span><span class="req-check">✓ Complete</span></div>
+            <div class="audit-req"><span>CS 3410 — Systems Programming</span><span class="req-partial">↻ In progress</span></div>
+            <div class="audit-req"><span>CS 4820 — Algorithms</span><span class="req-x">✗ Not taken</span></div>
+          </div>
+          <div class="audit-section">
+            <div class="audit-category">Math Requirements</div>
+            <div class="audit-req"><span>MATH 1910 — Calculus I</span><span class="req-check">✓ Complete</span></div>
+            <div class="audit-req"><span>MATH 1920 — Calculus II</span><span class="req-check">✓ Complete</span></div>
+            <div class="audit-req"><span>MATH 2940 — Linear Algebra</span><span class="req-partial">↻ In progress</span></div>
+            <div class="audit-req"><span>MATH 2930 — Differential Equations</span><span class="req-x">✗ Not taken</span></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Right column -->
+      <div>
+        <!-- Appointments -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Today's Appointments</span>
+            <span class="card-action">Manage schedule →</span>
+          </div>
+          <div class="appt-item">
+            <div class="appt-time"><div class="appt-time-main">9:00</div><div class="appt-time-ampm">AM</div></div>
+            <div class="appt-divider"></div>
+            <div><div class="appt-name">Priya Sharma</div><div class="appt-topic">Grad school planning</div></div>
+            <div class="appt-type type-virtual">Virtual</div>
+          </div>
+          <div class="appt-item">
+            <div class="appt-time"><div class="appt-time-main">10:00</div><div class="appt-time-ampm">AM</div></div>
+            <div class="appt-divider"></div>
+            <div><div class="appt-name">Aisha Johnson</div><div class="appt-topic">Academic recovery plan</div></div>
+            <div class="appt-type type-in">In person</div>
+          </div>
+          <div class="appt-item">
+            <div class="appt-time"><div class="appt-time-main">11:00</div><div class="appt-time-ampm">AM</div></div>
+            <div class="appt-divider"></div>
+            <div class="appt-empty">— Open slot —</div>
+          </div>
+          <div class="appt-item">
+            <div class="appt-time"><div class="appt-time-main">2:00</div><div class="appt-time-ampm">PM</div></div>
+            <div class="appt-divider"></div>
+            <div><div class="appt-name">Theo Okonkwo</div><div class="appt-topic">Graduation audit review</div></div>
+            <div class="appt-type type-in">In person</div>
+          </div>
+          <div class="appt-item">
+            <div class="appt-time"><div class="appt-time-main">3:00</div><div class="appt-time-ampm">PM</div></div>
+            <div class="appt-divider"></div>
+            <div><div class="appt-name">Jordan Martinez</div><div class="appt-topic">Fall 2025 course planning</div></div>
+            <div class="appt-type type-virtual">Virtual</div>
+          </div>
+          <div style="padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px;">
+            <button class="btn btn-primary" style="flex:1">+ New Appointment</button>
+          </div>
+        </div>
+
+        <!-- Recent Notes -->
+        <div class="card">
+          <div class="card-header">
+            <span class="card-title">Recent Advising Notes</span>
+            <span class="card-action">All notes →</span>
+          </div>
+          <div class="note-item">
+            <div class="note-header">
+              <span class="note-student">Aisha Johnson</span>
+              <span class="note-date">Apr 10</span>
+            </div>
+            <div class="note-text">Discussed academic recovery plan. Student will attend tutoring 3x/week. Follow-up scheduled for Apr 24. Consider withdrawal from MATH 2940 if no improvement by Week 12.</div>
+          </div>
+          <div class="note-item">
+            <div class="note-header">
+              <span class="note-student">Marcus Webb</span>
+              <span class="note-date">Apr 8</span>
+            </div>
+            <div class="note-text">Senior on probation. Confirmed all credits on track for May graduation. Needs B or better in CS 4820 to clear academic probation status.</div>
+          </div>
+          <div class="note-item">
+            <div class="note-header">
+              <span class="note-student">Priya Sharma</span>
+              <span class="note-date">Apr 3</span>
+            </div>
+            <div class="note-text">Discussing MIT and Stanford CS PhD programs. Strong candidate — recommended letters from Prof. Nakamura and Prof. Rodriguez.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>
