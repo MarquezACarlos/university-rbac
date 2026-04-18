@@ -92,27 +92,23 @@
     <div class="stats">
       <div class="stat border-accent">
         <div class="stat-label">Total Users</div>
-        <div class="stat-value">5,241</div>
+        <div class="stat-value">{{ users|length }}</div>
         <div class="stat-sub">Across all roles</div>
-        <div class="stat-trend trend-up">↑ +38 this week</div>
       </div>
       <div class="stat border-green">
-        <div class="stat-label">Active Sessions</div>
-        <div class="stat-value">312</div>
-        <div class="stat-sub">Right now</div>
-        <div class="stat-trend c-green">● Live</div>
+        <div class="stat-label">Students</div>
+        <div class="stat-value">{{ role_counts.student }}</div>
+        <div class="stat-sub">Enrolled users</div>
       </div>
-      <div class="stat border-red">
-        <div class="stat-label">SOD Violations</div>
-        <div class="stat-value">2</div>
-        <div class="stat-sub">Require review</div>
-        <div class="stat-trend trend-down">⚑ Action required</div>
+      <div class="stat border-accent">
+        <div class="stat-label">Advisors</div>
+        <div class="stat-value">{{ role_counts.advisor }}</div>
+        <div class="stat-sub">Assigned to majors</div>
       </div>
       <div class="stat border-amber">
-        <div class="stat-label">Failed Logins (24h)</div>
-        <div class="stat-value">17</div>
-        <div class="stat-sub">3 accounts flagged</div>
-        <div class="stat-trend c-amber">⚠ Monitor</div>
+        <div class="stat-label">Staff</div>
+        <div class="stat-value">{{ role_counts.professor|add:role_counts.registrar }}</div>
+        <div class="stat-sub">Professors &amp; registrars</div>
       </div>
     </div>
 
@@ -122,62 +118,46 @@
         <div class="card">
           <div class="card-header">
             <span class="card-title">// user_role_assignments</span>
-            <span class="card-action">+ Add user →</span>
+            <a href="{% url 'create_user' %}" class="card-action">+ Add user →</a>
           </div>
           <table class="role-table">
             <thead>
               <tr>
                 <th>User</th>
                 <th>Role</th>
-                <th>Department</th>
+                <th>Major / Department</th>
                 <th>Status</th>
-                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
+              {% for user in users %}
               <tr>
-                <td><div class="user-name-mono">r.nakamura</div><div class="user-id-mono">uid:1042</div></td>
-                <td><span class="role-badge rb-professor">PROFESSOR</span></td>
-                <td style="color:var(--muted)">Computer Science</td>
+                <td>
+                  <div class="user-name-mono">{{ user.username }}</div>
+                  <div class="user-id-mono">{{ user.get_full_name }}{% if user.university_id %} · {{ user.university_id }}{% endif %}</div>
+                </td>
+                <td>
+                  {% if user.role == "student" %}<span class="role-badge rb-student">STUDENT</span>
+                  {% elif user.role == "professor" %}<span class="role-badge rb-professor">PROFESSOR</span>
+                  {% elif user.role == "advisor" %}<span class="role-badge rb-advisor">ADVISOR</span>
+                  {% elif user.role == "registrar" %}<span class="role-badge rb-registrar">REGISTRAR</span>
+                  {% elif user.role == "sysadmin" or user.is_superuser %}<span class="role-badge rb-admin">SYS_ADMIN</span>
+                  {% else %}<span class="role-badge">{{ user.role|upper }}</span>{% endif %}
+                </td>
+                <td style="color:var(--muted)">
+                  {% if user.role == "student" %}{{ user.student_profile.major|default:"—" }}
+                  {% else %}{{ user.role|title }}{% endif %}
+                </td>
                 <td><span class="status-active">● active</span></td>
-                <td><button class="btn-table">Edit</button><button class="btn-table danger">Revoke</button></td>
               </tr>
-              <tr>
-                <td><div class="user-name-mono">k.park</div><div class="user-id-mono">uid:0811</div></td>
-                <td><span class="role-badge rb-registrar">REGISTRAR</span></td>
-                <td style="color:var(--muted)">Registrar Office</td>
-                <td><span class="status-active">● active</span></td>
-                <td><button class="btn-table">Edit</button><button class="btn-table danger">Revoke</button></td>
-              </tr>
-              <tr>
-                <td><div class="user-name-mono">s.lee</div><div class="user-id-mono">uid:0923</div></td>
-                <td><span class="role-badge rb-advisor">ADVISOR</span></td>
-                <td style="color:var(--muted)">Computer Science</td>
-                <td><span class="status-active">● active</span></td>
-                <td><button class="btn-table">Edit</button><button class="btn-table danger">Revoke</button></td>
-              </tr>
-              <tr>
-                <td><div class="user-name-mono">j.martinez</div><div class="user-id-mono">uid:4847</div></td>
-                <td><span class="role-badge rb-student">STUDENT</span></td>
-                <td style="color:var(--muted)">Computer Science</td>
-                <td><span class="status-active">● active</span></td>
-                <td><button class="btn-table">Edit</button><button class="btn-table danger">Revoke</button></td>
-              </tr>
-              <tr>
-                <td><div class="user-name-mono">root_admin</div><div class="user-id-mono">uid:0001</div></td>
-                <td><span class="role-badge rb-admin">SYS_ADMIN</span></td>
-                <td style="color:var(--muted)">IT Operations</td>
-                <td><span class="status-active">● active</span></td>
-                <td><button class="btn-table">Edit</button></td>
-              </tr>
+              {% empty %}
+              <tr><td colspan="4" style="padding:16px;color:var(--muted);text-align:center">No users found.</td></tr>
+              {% endfor %}
             </tbody>
           </table>
           <div style="padding: 10px 14px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center;">
-            <span style="font-family: var(--mono); font-size: 10px; color: var(--muted)">5,241 total users · Page 1 of 105</span>
-            <div style="display:flex;gap:6px;">
-              <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px;">← Prev</button>
-              <button class="btn btn-ghost" style="font-size:11px;padding:5px 10px;">Next →</button>
-            </div>
+            <span style="font-family: var(--mono); font-size: 10px; color: var(--muted)">{{ users|length }} total users</span>
+            <a href="{% url 'create_user' %}" class="btn btn-ghost" style="font-size:11px;padding:5px 14px;font-family:var(--mono)">+ new user</a>
           </div>
         </div>
 
@@ -292,11 +272,11 @@
         <div class="card">
           <div class="card-header"><span class="card-title">// role_distribution</span></div>
           <div style="padding: 8px 0;">
-            <div class="health-row"><span class="health-name" style="width:90px">STUDENT</span><div class="health-bar" style="flex:1"><div class="hb-fill" style="width:90%;background:var(--muted)"></div></div><span class="health-val" style="color:var(--muted)">4,812</span></div>
-            <div class="health-row"><span class="health-name" style="width:90px">PROFESSOR</span><div class="health-bar" style="flex:1"><div class="hb-fill" style="width:8%;background:var(--accent)"></div></div><span class="health-val" style="color:var(--accent)">284</span></div>
-            <div class="health-row"><span class="health-name" style="width:90px">ADVISOR</span><div class="health-bar" style="flex:1"><div class="hb-fill" style="width:4%;background:var(--green)"></div></div><span class="health-val" style="color:var(--green)">112</span></div>
-            <div class="health-row"><span class="health-name" style="width:90px">REGISTRAR</span><div class="health-bar" style="flex:1"><div class="hb-fill" style="width:1%;background:var(--amber)"></div></div><span class="health-val" style="color:var(--amber)">28</span></div>
-            <div class="health-row"><span class="health-name" style="width:90px">SYS_ADMIN</span><div class="health-bar" style="flex:1"><div class="hb-fill" style="width:1%;background:var(--purple)"></div></div><span class="health-val" style="color:var(--purple)">5</span></div>
+            <div class="health-row"><span class="health-name" style="width:90px">STUDENT</span><div class="health-bar" style="flex:1"><div class="hb-fill" style="width:90%;background:var(--muted)"></div></div><span class="health-val" style="color:var(--muted)">{{ role_counts.student }}</span></div>
+            <div class="health-row"><span class="health-name" style="width:90px">PROFESSOR</span><div class="health-bar" style="flex:1"><div class="hb-fill" style="width:8%;background:var(--accent)"></div></div><span class="health-val" style="color:var(--accent)">{{ role_counts.professor }}</span></div>
+            <div class="health-row"><span class="health-name" style="width:90px">ADVISOR</span><div class="health-bar" style="flex:1"><div class="hb-fill" style="width:4%;background:var(--green)"></div></div><span class="health-val" style="color:var(--green)">{{ role_counts.advisor }}</span></div>
+            <div class="health-row"><span class="health-name" style="width:90px">REGISTRAR</span><div class="health-bar" style="flex:1"><div class="hb-fill" style="width:1%;background:var(--amber)"></div></div><span class="health-val" style="color:var(--amber)">{{ role_counts.registrar }}</span></div>
+            <div class="health-row"><span class="health-name" style="width:90px">SYS_ADMIN</span><div class="health-bar" style="flex:1"><div class="hb-fill" style="width:1%;background:var(--purple)"></div></div><span class="health-val" style="color:var(--purple)">{{ role_counts.sysadmin }}</span></div>
           </div>
         </div>
       </div>

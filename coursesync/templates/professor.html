@@ -32,7 +32,6 @@
       <a class="nav-item" href="#">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
         Grade Entry
-        <span class="badge">12</span>
       </a>
       <a class="nav-item" href="#">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
@@ -50,7 +49,6 @@
       <a class="nav-item" href="#">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
         Messages
-        <span class="badge">3</span>
       </a>
     </nav>
     <div class="sidebar-footer">
@@ -72,7 +70,7 @@
     <div class="page-header">
       <div>
         <div class="page-title">Faculty Dashboard</div>
-        <div class="page-sub">Spring 2025 · 3 active courses · 187 students</div>
+        <div class="page-sub">{{ courses|length }} active course{{ courses|length|pluralize }} · {{ total_students }} enrolled student{{ total_students|pluralize }}</div>
       </div>
       <div class="header-actions">
         <button class="btn btn-ghost">Export Grades</button>
@@ -83,23 +81,13 @@
     <div class="stats">
       <div class="stat blue">
         <div class="stat-label">Total Students</div>
-        <div class="stat-value">187</div>
-        <div class="stat-sub">across 3 courses</div>
+        <div class="stat-value">{{ total_students }}</div>
+        <div class="stat-sub">across {{ courses|length }} course{{ courses|length|pluralize }}</div>
       </div>
-      <div class="stat green">
-        <div class="stat-label">Avg Class GPA</div>
-        <div class="stat-value">3.18</div>
-        <div class="stat-sub">+0.12 vs last semester</div>
-      </div>
-      <div class="stat amber">
-        <div class="stat-label">Grades Pending</div>
-        <div class="stat-value">12</div>
-        <div class="stat-sub">Due by Apr 20</div>
-      </div>
-      <div class="stat red">
-        <div class="stat-label">At-Risk Students</div>
-        <div class="stat-value">4</div>
-        <div class="stat-sub">Below 2.0 in course</div>
+      <div class="stat">
+        <div class="stat-label">Courses Teaching</div>
+        <div class="stat-value">{{ courses|length }}</div>
+        <div class="stat-sub">this semester</div>
       </div>
     </div>
 
@@ -112,36 +100,19 @@
             <span class="card-action">Manage all →</span>
           </div>
           <div class="course-grid">
+            {% for course in courses %}
             <div class="course-card">
-              <div class="course-tag">CS 3410</div>
-              <div class="course-name">Data Structures & Algorithms</div>
-              <div class="course-meta">TR 9:30–10:45 · Gates 114</div>
+              <div class="course-tag">{{ course.code }}</div>
+              <div class="course-name">{{ course.title }}</div>
+              <div class="course-meta">{{ course.credits }} credit{{ course.credits|pluralize }}{% if course.capacity %} · Cap: {{ course.capacity }}{% endif %}</div>
               <div class="course-stats">
-                <div class="cs-item"><div class="cs-val">68</div><div class="cs-lbl">Students</div></div>
-                <div class="cs-item"><div class="cs-val" style="color:var(--green)">3.24</div><div class="cs-lbl">Avg GPA</div></div>
-                <div class="cs-item"><div class="cs-val" style="color:var(--amber)">5</div><div class="cs-lbl">Pending</div></div>
+                <div class="cs-item"><div class="cs-val">{{ course.student_count }}</div><div class="cs-lbl">Students</div></div>
+                <div class="cs-item"><div class="cs-val">{{ course.credits }}</div><div class="cs-lbl">Credits</div></div>
               </div>
             </div>
-            <div class="course-card">
-              <div class="course-tag">CS 4850</div>
-              <div class="course-name">Machine Learning</div>
-              <div class="course-meta">MWF 11:00–11:50 · Upson 205</div>
-              <div class="course-stats">
-                <div class="cs-item"><div class="cs-val">42</div><div class="cs-lbl">Students</div></div>
-                <div class="cs-item"><div class="cs-val" style="color:var(--green)">3.41</div><div class="cs-lbl">Avg GPA</div></div>
-                <div class="cs-item"><div class="cs-val" style="color:var(--amber)">4</div><div class="cs-lbl">Pending</div></div>
-              </div>
-            </div>
-            <div class="course-card" style="grid-column: span 2;">
-              <div class="course-tag">CS 6780</div>
-              <div class="course-name">Advanced AI — Graduate Seminar</div>
-              <div class="course-meta">W 2:00–4:45 · Gates 310 · Graduate level</div>
-              <div class="course-stats">
-                <div class="cs-item"><div class="cs-val">18</div><div class="cs-lbl">Students</div></div>
-                <div class="cs-item"><div class="cs-val" style="color:var(--green)">3.72</div><div class="cs-lbl">Avg GPA</div></div>
-                <div class="cs-item"><div class="cs-val" style="color:var(--red)">3</div><div class="cs-lbl">Pending</div></div>
-              </div>
-            </div>
+            {% empty %}
+            <div style="padding:20px;color:var(--muted);font-size:13px;grid-column:span 2">No courses assigned yet.</div>
+            {% endfor %}
           </div>
         </div>
 

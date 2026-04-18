@@ -1,0 +1,101 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Major — CourseSync</title>
+  <link rel="stylesheet" href="{% static 'css/registrar.css' %}">
+  <style>
+    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); max-width: 520px; }
+    .form-body { padding: 24px 28px; display: flex; flex-direction: column; gap: 18px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); }
+    .field input, .field select {
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--bg);
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
+    .field .errorlist { list-style: none; color: var(--red); font-size: 11.5px; margin-top: 4px; }
+    .field-hint { font-size: 11.5px; color: var(--muted); margin-top: 4px; }
+    .form-actions { display: flex; gap: 10px; justify-content: flex-end; padding: 16px 28px; border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">CourseSync</div>
+      <div class="brand-role">Registrar Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Operations</div>
+      <a class="nav-item" href="{% url 'registrar_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item active" href="{% url 'create_major' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        New Major
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+        <div>
+          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="user-title">{{ request.user.role|title }}</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">Logout</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">New Major</div>
+        <div class="page-sub">Add a field of study and assign a responsible advisor</div>
+      </div>
+      <div class="header-actions">
+        <a href="{% url 'registrar_dashboard' %}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" form="major-form" class="btn btn-primary">Create Major</button>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <form method="post" id="major-form">
+        {% csrf_token %}
+        <div class="form-body">
+          <div class="field">
+            <label for="{{ form.name.id_for_label }}">Major Name</label>
+            {{ form.name }}
+            {% if form.name.errors %}<ul class="errorlist">{% for e in form.name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+          <div class="field">
+            <label for="{{ form.advisor.id_for_label }}">Assigned Advisor</label>
+            {{ form.advisor }}
+            {% if form.advisor.errors %}<ul class="errorlist">{% for e in form.advisor.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            <div class="field-hint">Optional — can be assigned later. Each advisor can only be assigned to one major.</div>
+          </div>
+        </div>
+        <div class="form-actions">
+          <a href="{% url 'registrar_dashboard' %}" class="btn btn-ghost">Cancel</a>
+          <button type="submit" class="btn btn-primary">Create Major</button>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+</body>
+</html>

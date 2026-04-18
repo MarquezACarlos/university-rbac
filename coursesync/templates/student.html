@@ -70,117 +70,126 @@
   <!-- Main -->
   <main class="main">
     <div class="page-header">
-      <div class="page-title">Good morning, Jordan</div>
-      <div class="page-sub">Spring 2025 · Junior · Computer Science</div>
+      <div class="page-title">Welcome, {{ request.user.first_name|default:request.user.username }}</div>
+      <div class="page-sub">{{ request.user.university_id|default:"" }}{% if profile %} · {{ profile.major }}{% endif %}</div>
     </div>
 
     <div class="stats">
       <div class="stat accent">
         <div class="stat-label">Enrolled Courses</div>
-        <div class="stat-value">5</div>
-        <div class="stat-sub">15 credit hours</div>
+        <div class="stat-value">{{ enrollments|length }}</div>
+        <div class="stat-sub">approved this semester</div>
       </div>
       <div class="stat">
         <div class="stat-label">Cumulative GPA</div>
-        <div class="stat-value">3.62</div>
-        <div class="stat-sub">Dean's List eligible</div>
+        <div class="stat-value">{% if profile %}{{ profile.gpa }}{% else %}—{% endif %}</div>
+        <div class="stat-sub">current standing</div>
       </div>
       <div class="stat warn">
-        <div class="stat-label">Assignments Due</div>
-        <div class="stat-value">3</div>
-        <div class="stat-sub">Next: Friday 5pm</div>
+        <div class="stat-label">Pending Requests</div>
+        <div class="stat-value">{{ pending_enrollments|length }}</div>
+        <div class="stat-sub">awaiting advisor review</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Credits Completed</div>
-        <div class="stat-value">78</div>
-        <div class="stat-sub">of 120 required</div>
+        <div class="stat-label">Available Courses</div>
+        <div class="stat-value">{{ available_courses|length }}</div>
+        <div class="stat-sub">open for request</div>
       </div>
     </div>
 
     <div class="content-grid">
       <div>
-        <!-- Current Courses -->
+        <!-- Enrolled Courses -->
         <div class="card" style="margin-bottom: 20px;">
           <div class="card-header">
-            <span class="card-title">Current Courses</span>
-            <span class="card-action">View all →</span>
+            <span class="card-title">Enrolled Courses</span>
           </div>
-          <div class="col-header">
+          {% if enrollments %}
+          <div class="col-header" style="grid-template-columns: 3fr 1fr 2fr">
             <span class="col-label">Course</span>
             <span class="col-label">Credits</span>
-            <span class="col-label">Grade</span>
-            <span class="col-label">Progress</span>
+            <span class="col-label">Professor</span>
           </div>
           <div class="card-body">
-            <div class="course-row">
-              <div><div class="course-name">Data Structures & Algorithms</div><div class="course-code">CS 3410 · TR 9:30–10:45</div></div>
-              <div>3</div>
-              <div><span class="grade-badge grade-a">A−</span></div>
-              <div><div class="progress-bar"><div class="progress-fill" style="width:68%"></div></div><div style="font-size:11px;color:var(--muted);margin-top:3px">68%</div></div>
+            {% for enrollment in enrollments %}
+            <div class="course-row" style="grid-template-columns: 3fr 1fr 2fr">
+              <div>
+                <div class="course-name">{{ enrollment.course.title }}</div>
+                <div class="course-code">{{ enrollment.course.code }}</div>
+              </div>
+              <div>{{ enrollment.course.credits }}</div>
+              <div>{{ enrollment.course.professor.get_full_name|default:"TBA" }}</div>
             </div>
-            <div class="course-row">
-              <div><div class="course-name">Database Systems</div><div class="course-code">CS 4320 · MWF 10:00–10:50</div></div>
-              <div>3</div>
-              <div><span class="grade-badge grade-b">B+</span></div>
-              <div><div class="progress-bar"><div class="progress-fill" style="width:72%;background:var(--info)"></div></div><div style="font-size:11px;color:var(--muted);margin-top:3px">72%</div></div>
-            </div>
-            <div class="course-row">
-              <div><div class="course-name">Software Engineering</div><div class="course-code">CS 3700 · MW 2:00–3:15</div></div>
-              <div>3</div>
-              <div><span class="grade-badge grade-a">A</span></div>
-              <div><div class="progress-bar"><div class="progress-fill" style="width:61%"></div></div><div style="font-size:11px;color:var(--muted);margin-top:3px">61%</div></div>
-            </div>
-            <div class="course-row">
-              <div><div class="course-name">Technical Writing</div><div class="course-code">ENG 3150 · TR 2:00–3:15</div></div>
-              <div>3</div>
-              <div><span class="grade-badge grade-b">B</span></div>
-              <div><div class="progress-bar"><div class="progress-fill" style="width:55%;background:var(--info)"></div></div><div style="font-size:11px;color:var(--muted);margin-top:3px">55%</div></div>
-            </div>
-            <div class="course-row">
-              <div><div class="course-name">Linear Algebra</div><div class="course-code">MATH 2940 · MWF 1:00–1:50</div></div>
-              <div>3</div>
-              <div><span class="grade-badge grade-c">C+</span></div>
-              <div><div class="progress-bar"><div class="progress-fill" style="width:48%;background:var(--warn)"></div></div><div style="font-size:11px;color:var(--muted);margin-top:3px">48%</div></div>
-            </div>
+            {% endfor %}
           </div>
+          {% else %}
+          <div style="padding:20px;color:var(--muted);font-size:13px;text-align:center">No approved enrollments yet. Request courses below.</div>
+          {% endif %}
         </div>
 
-        <!-- Today's Schedule -->
-        <div class="card">
+        <!-- Pending / Denied Requests -->
+        {% if pending_enrollments or denied_enrollments %}
+        <div class="card" style="margin-bottom: 20px;">
           <div class="card-header">
-            <span class="card-title">Today — Tuesday, April 15</span>
-            <span class="card-action">Full schedule →</span>
+            <span class="card-title">My Enrollment Requests</span>
           </div>
           <div class="card-body">
-            <div class="schedule-item">
-              <div class="schedule-time">9:30 AM</div>
-              <div class="schedule-dot"></div>
-              <div><div class="schedule-course">Data Structures & Algorithms</div><div class="schedule-loc">Gates Hall 114 · Prof. Nakamura</div></div>
+            {% for enrollment in pending_enrollments %}
+            <div class="course-row" style="grid-template-columns: 3fr 1fr">
+              <div>
+                <div class="course-name">{{ enrollment.course.title }}</div>
+                <div class="course-code">{{ enrollment.course.code }}</div>
+              </div>
+              <div><span class="status-pill pill-pending">Pending advisor review</span></div>
             </div>
-            <div class="schedule-item">
-              <div class="schedule-time">10:00 AM</div>
-              <div class="schedule-dot"></div>
-              <div><div class="schedule-course">Database Systems</div><div class="schedule-loc">Rhodes Hall 405 · Prof. Chen</div></div>
+            {% endfor %}
+            {% for enrollment in denied_enrollments %}
+            <div class="course-row" style="grid-template-columns: 3fr 1fr">
+              <div>
+                <div class="course-name">{{ enrollment.course.title }}</div>
+                <div class="course-code">{{ enrollment.course.code }}</div>
+              </div>
+              <div><span class="status-pill pill-denied">Denied</span></div>
             </div>
-            <div class="schedule-item">
-              <div class="schedule-time">1:00 PM</div>
-              <div class="schedule-dot warn"></div>
-              <div><div class="schedule-course">Linear Algebra</div><div class="schedule-loc">Malott Hall 251 · Prof. Williams · <span style="color:var(--warn);font-weight:500">Quiz today</span></div></div>
-            </div>
-            <div class="schedule-item">
-              <div class="schedule-time">2:00 PM</div>
-              <div class="schedule-dot"></div>
-              <div><div class="schedule-course">Software Engineering</div><div class="schedule-loc">Bloomberg Hall 165 · Prof. Rodriguez</div></div>
-            </div>
+            {% endfor %}
           </div>
+        </div>
+        {% endif %}
+
+        <!-- Course Catalog -->
+        <div class="card" id="catalog">
+          <div class="card-header">
+            <span class="card-title">Course Catalog</span>
+            <span class="card-sub" style="font-size:12px;color:var(--muted)">Request a course — your advisor must approve</span>
+          </div>
+          {% if available_courses %}
+          <div class="card-body">
+            {% for course in available_courses %}
+            <div style="display:flex;align-items:flex-start;padding:14px 20px;border-bottom:1px solid var(--border);gap:12px">
+              <div style="flex:1">
+                <div class="course-name">{{ course.title }}</div>
+                <div class="course-code">{{ course.code }} · {{ course.credits }} credits{% if course.professor %} · {{ course.professor.get_full_name }}{% endif %}</div>
+                {% if course.description %}<div style="font-size:12px;color:var(--muted);margin-top:4px">{{ course.description }}</div>{% endif %}
+              </div>
+              <form method="post" action="{% url 'propose_enrollment' course.id %}" style="flex-shrink:0">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-primary btn-sm">Request</button>
+              </form>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div style="padding:20px;color:var(--muted);font-size:13px;text-align:center">No additional courses available to request.</div>
+          {% endif %}
         </div>
       </div>
 
       <!-- Right column -->
       <div>
-        <!-- GPA Card -->
+        <!-- Academic Standing -->
         <div class="card" style="margin-bottom: 14px;">
           <div class="card-header"><span class="card-title">Academic Standing</span></div>
+          {% if profile %}
           <div class="gpa-display">
             <div class="gpa-ring">
               <svg width="120" height="120" viewBox="0 0 120 120">
@@ -188,45 +197,22 @@
                 <circle cx="60" cy="60" r="50" fill="none" stroke="#2D5A3D" stroke-width="8" stroke-dasharray="226 314" stroke-linecap="round"/>
               </svg>
               <div class="gpa-center">
-                <div class="gpa-number">3.62</div>
+                <div class="gpa-number">{{ profile.gpa }}</div>
                 <div class="gpa-label">GPA</div>
               </div>
             </div>
-            <div class="standing-badge">Good Standing</div>
+            <div class="standing-badge">{{ profile.major }}</div>
           </div>
-          <div class="credit-bar">
-            <div class="credit-label"><span>Credits toward degree</span><span class="credit-value">78 / 120</span></div>
-            <div class="progress-bar"><div class="progress-fill" style="width:65%"></div></div>
-          </div>
+          {% else %}
+          <div style="padding:20px;color:var(--muted);font-size:13px;text-align:center">No academic profile found.</div>
+          {% endif %}
         </div>
 
-        <!-- Enrollment Window -->
+        <!-- Quick link to catalog -->
         <div class="enroll-card">
-          <div class="enroll-title">Fall 2025 Enrollment</div>
-          <div class="enroll-sub">Opens in 12 days · April 27, 8:00 AM</div>
-          <button class="enroll-btn">Browse Course Catalog</button>
-        </div>
-
-        <!-- Announcements -->
-        <div class="card">
-          <div class="card-header"><span class="card-title">Announcements</span></div>
-          <div class="card-body">
-            <div class="announce-item">
-              <div class="announce-tag">CS 3410</div>
-              <div class="announce-title">Midterm grades posted — check portal</div>
-              <div class="announce-date">2 hours ago</div>
-            </div>
-            <div class="announce-item">
-              <div class="announce-tag">Registrar</div>
-              <div class="announce-title">Fall 2025 enrollment schedule released</div>
-              <div class="announce-date">Yesterday</div>
-            </div>
-            <div class="announce-item">
-              <div class="announce-tag">CS 4320</div>
-              <div class="announce-title">Project 2 deadline extended to Apr 18</div>
-              <div class="announce-date">2 days ago</div>
-            </div>
-          </div>
+          <div class="enroll-title">Register for Courses</div>
+          <div class="enroll-sub">Browse the catalog and submit requests to your advisor</div>
+          <a href="#catalog" class="enroll-btn" style="display:block;text-align:center;text-decoration:none">Browse Course Catalog</a>
         </div>
       </div>
     </div>

@@ -1,0 +1,132 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ action }} Course — CourseSync</title>
+  <link rel="stylesheet" href="{% static 'css/registrar.css' %}">
+  <style>
+    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); max-width: 680px; margin: 0 auto; }
+    .form-body { padding: 24px 28px; display: flex; flex-direction: column; gap: 18px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .field { display: flex; flex-direction: column; gap: 6px; }
+    .field label { font-size: 11.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.7px; color: var(--muted); }
+    .field input, .field select, .field textarea {
+      padding: 9px 12px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      font-family: 'Sora', sans-serif;
+      font-size: 13px;
+      color: var(--text);
+      background: var(--bg);
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    .field input:focus, .field select:focus, .field textarea:focus {
+      outline: none;
+      border-color: var(--accent);
+    }
+    .field textarea { resize: vertical; }
+    .field .errorlist { list-style: none; color: var(--red); font-size: 11.5px; margin-top: 4px; }
+    .form-actions { display: flex; gap: 10px; justify-content: flex-end; padding: 16px 28px; border-top: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">CourseSync</div>
+      <div class="brand-role">Registrar Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Operations</div>
+      <a class="nav-item" href="{% url 'registrar_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item active" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        {{ action }} Course
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+        <div>
+          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="user-title">{{ request.user.role|title }}</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">Logout</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">{{ action }} Course</div>
+        <div class="page-sub">{% if action == "Edit" %}Editing: {{ course }}{% else %}Add a new course to the catalog{% endif %}</div>
+      </div>
+      <div class="header-actions">
+        <a href="{% url 'registrar_dashboard' %}" class="btn btn-ghost">Cancel</a>
+        <button type="submit" form="course-form" class="btn btn-primary">{% if action == "Edit" %}Save Changes{% else %}Create Course{% endif %}</button>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <form method="post" id="course-form">
+        {% csrf_token %}
+        <div class="form-body">
+          <div class="form-row">
+            <div class="field">
+              <label for="{{ form.code.id_for_label }}">Course Code</label>
+              {{ form.code }}
+              {% if form.code.errors %}<ul class="errorlist">{% for e in form.code.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="field">
+              <label for="{{ form.title.id_for_label }}">Title</label>
+              {{ form.title }}
+              {% if form.title.errors %}<ul class="errorlist">{% for e in form.title.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="{{ form.description.id_for_label }}">Description</label>
+            {{ form.description }}
+            {% if form.description.errors %}<ul class="errorlist">{% for e in form.description.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+
+          <div class="form-row">
+            <div class="field">
+              <label for="{{ form.credits.id_for_label }}">Credits</label>
+              {{ form.credits }}
+              {% if form.credits.errors %}<ul class="errorlist">{% for e in form.credits.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="field">
+              <label for="{{ form.capacity.id_for_label }}">Capacity</label>
+              {{ form.capacity }}
+              {% if form.capacity.errors %}<ul class="errorlist">{% for e in form.capacity.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="{{ form.professor.id_for_label }}">Assigned Professor</label>
+            {{ form.professor }}
+            {% if form.professor.errors %}<ul class="errorlist">{% for e in form.professor.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+        </div>
+
+        <div class="form-actions">
+          <a href="{% url 'registrar_dashboard' %}" class="btn btn-ghost">Cancel</a>
+          <button type="submit" class="btn btn-primary">{% if action == "Edit" %}Save Changes{% else %}Create Course{% endif %}</button>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+</body>
+</html>

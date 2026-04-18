@@ -127,13 +127,20 @@
   border-radius: 7px;
   background: var(--surface2);
   color: var(--text);
-  font-family: 'IBM Plex Sans', sans-serif;
+  font-family: 'DM Sans', sans-serif;
   font-size: 13px;
   cursor: pointer;
   transition: all 0.15s;
 }
+.logout-btn:hover { background: var(--surface); color: var(--accent); }
 
-.logout-btn:hover {
-  background: var(--surface);
-  color: var(--accent);
-}
+/* Status pills */
+.status-pill { display: inline-block; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.pill-pending { background: var(--warn-light); color: var(--warn); }
+.pill-denied  { background: #FEF0F0; color: #D63B3B; }
+
+/* Buttons */
+.btn { display: inline-block; padding: 8px 16px; border-radius: 7px; font-size: 12.5px; font-weight: 500; cursor: pointer; border: none; font-family: 'DM Sans', sans-serif; text-decoration: none; }
+.btn-primary { background: var(--accent); color: white; }
+.btn-primary:hover { opacity: 0.88; }
+.btn-sm { padding: 5px 12px; font-size: 12px; }

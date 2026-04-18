@@ -5,6 +5,21 @@ from django.db import models
 User = settings.AUTH_USER_MODEL
 
 
+class Major(models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    advisor = models.OneToOneField(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="advised_major",
+        limit_choices_to={"role": "advisor"},
+    )
+
+    def __str__(self):
+        return self.name
+
+
 class StudentProfile(models.Model):
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name="student_profile")
     major = models.CharField(max_length=100)

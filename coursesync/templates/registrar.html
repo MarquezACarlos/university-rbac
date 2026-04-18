@@ -23,11 +23,15 @@
       <a class="nav-item" href="#">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
         Enrollment Queue
-        <span class="badge">14</span>
+        {% if pending_requests %}<span class="badge">{{ pending_requests|length }}</span>{% endif %}
       </a>
       <a class="nav-item" href="#">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
         Course Catalog
+      </a>
+      <a class="nav-item" href="{% url 'create_major' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+        New Major
       </a>
       <a class="nav-item" href="#">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
@@ -71,39 +75,34 @@
     <div class="page-header">
       <div>
         <div class="page-title">Registrar Dashboard</div>
-        <div class="page-sub">Spring 2025 · Enrollment period active · Fall 2025 opens Apr 27</div>
+        <div class="page-sub">{{ student_count }} student{{ student_count|pluralize }} · {{ courses|length }} course{{ courses|length|pluralize }} · {{ pending_requests|length }} pending</div>
       </div>
       <div class="header-actions">
         <button class="btn btn-ghost">Generate Report</button>
-        <button class="btn btn-primary">+ Add Course Section</button>
+        <a href="{% url 'create_course' %}" class="btn btn-primary">+ Add Course Section</a>
       </div>
     </div>
 
     <div class="stats">
       <div class="stat">
-        <div class="stat-label">Total Enrollment</div>
-        <div class="stat-value c-accent">4,812</div>
-        <div class="stat-sub">Active students</div>
+        <div class="stat-label">Total Students</div>
+        <div class="stat-value c-accent">{{ student_count }}</div>
+        <div class="stat-sub">Registered in system</div>
       </div>
       <div class="stat">
         <div class="stat-label">Pending Requests</div>
-        <div class="stat-value c-amber">14</div>
+        <div class="stat-value {% if pending_requests %}c-amber{% endif %}">{{ pending_requests|length }}</div>
         <div class="stat-sub">Awaiting action</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Active Holds</div>
-        <div class="stat-value c-red">7</div>
-        <div class="stat-sub">Blocking enrollment</div>
-      </div>
-      <div class="stat">
         <div class="stat-label">Course Sections</div>
-        <div class="stat-value">312</div>
-        <div class="stat-sub">Spring 2025</div>
+        <div class="stat-value">{{ courses|length }}</div>
+        <div class="stat-sub">Total courses</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Capacity Used</div>
-        <div class="stat-value c-green">84%</div>
-        <div class="stat-sub">avg across sections</div>
+        <div class="stat-label">Majors</div>
+        <div class="stat-value">{{ majors|length }}</div>
+        <div class="stat-sub">Fields of study</div>
       </div>
     </div>
 
@@ -122,105 +121,80 @@
             <span class="card-title">Pending Enrollment Requests</span>
             <span class="card-action">Bulk approve →</span>
           </div>
+          {% if pending_requests %}
           <table class="enroll-table">
             <thead>
               <tr>
                 <th>Student</th>
                 <th>Course</th>
-                <th>Type</th>
                 <th>Status</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
+              {% for enrollment in pending_requests %}
               <tr>
-                <td><div class="stu-name">Jordan Martinez</div><div class="stu-meta">STU-2024-0847 · Junior</div></td>
-                <td><div style="font-weight:500">CS 4820</div><div class="stu-meta">Algorithms · 3 cr</div></td>
-                <td>Add</td>
+                <td>
+                  <div class="stu-name">{{ enrollment.student.get_full_name|default:enrollment.student.username }}</div>
+                  <div class="stu-meta">{{ enrollment.student.university_id }}</div>
+                </td>
+                <td>
+                  <div style="font-weight:500">{{ enrollment.course.code }}</div>
+                  <div class="stu-meta">{{ enrollment.course.title }} · {{ enrollment.course.credits }} cr</div>
+                </td>
                 <td><span class="status-pill pill-pending">Pending</span></td>
                 <td class="actions">
-                  <button class="btn btn-success btn-sm">Approve</button>
-                  <button class="btn btn-danger btn-sm">Deny</button>
+                  <a href="{% url 'approve_enrollment' enrollment.id %}" class="btn btn-success btn-sm">Approve</a>
+                  <a href="{% url 'deny_enrollment' enrollment.id %}" class="btn btn-danger btn-sm">Deny</a>
                 </td>
               </tr>
-              <tr>
-                <td><div class="stu-name">Lena Fischer</div><div class="stu-meta">STU-2025-0104 · Freshman</div></td>
-                <td><div style="font-weight:500">CS 4850</div><div class="stu-meta">Machine Learning · 3 cr</div></td>
-                <td>Override</td>
-                <td><span class="status-pill pill-pending">Pending</span></td>
-                <td class="actions">
-                  <button class="btn btn-success btn-sm">Approve</button>
-                  <button class="btn btn-danger btn-sm">Deny</button>
-                </td>
-              </tr>
-              <tr>
-                <td><div class="stu-name">Marcus Webb</div><div class="stu-meta">STU-2023-0341 · Senior</div></td>
-                <td><div style="font-weight:500">CS 4320</div><div class="stu-meta">Database Systems · 3 cr</div></td>
-                <td>Late add</td>
-                <td><span class="status-pill pill-pending">Pending</span></td>
-                <td class="actions">
-                  <button class="btn btn-success btn-sm">Approve</button>
-                  <button class="btn btn-danger btn-sm">Deny</button>
-                </td>
-              </tr>
-              <tr>
-                <td><div class="stu-name">Sara Kim</div><div class="stu-meta">STU-2024-0633 · Junior</div></td>
-                <td><div style="font-weight:500">ENG 3150</div><div class="stu-meta">Technical Writing · 3 cr</div></td>
-                <td>Drop</td>
-                <td><span class="status-pill pill-approved">Approved</span></td>
-                <td class="actions">
-                  <button class="btn btn-ghost btn-sm">View</button>
-                </td>
-              </tr>
-              <tr>
-                <td><div class="stu-name">Theo Okonkwo</div><div class="stu-meta">STU-2023-0788 · Senior</div></td>
-                <td><div style="font-weight:500">CS 6780</div><div class="stu-meta">Advanced AI · 3 cr</div></td>
-                <td>Override</td>
-                <td><span class="status-pill pill-denied">Denied</span></td>
-                <td class="actions">
-                  <button class="btn btn-ghost btn-sm">View</button>
-                </td>
-              </tr>
+              {% endfor %}
             </tbody>
           </table>
+          {% else %}
+          <div style="padding: 24px 18px; color: var(--muted); font-size: 13px; text-align: center;">No pending enrollment requests.</div>
+          {% endif %}
         </div>
 
-        <!-- Course capacities -->
+        <!-- Course catalog -->
         <div class="card">
           <div class="card-header">
-            <span class="card-title">Section Capacity — Spring 2025</span>
-            <span class="card-action">All sections →</span>
+            <span class="card-title">Course Catalog</span>
+            <a href="{% url 'create_course' %}" class="card-action">+ New course</a>
           </div>
-          <div class="course-cap">
-            <span class="cap-code">CS 1110</span>
-            <span class="cap-name">Intro to Computing</span>
-            <div class="cap-bar-wrap"><div class="cap-fill fill-red" style="width:98%"></div></div>
-            <span class="cap-num c-red">248/250</span>
+          {% if courses %}
+          <table class="enroll-table">
+            <thead>
+              <tr>
+                <th>Code</th>
+                <th>Title</th>
+                <th>Professor</th>
+                <th>Credits</th>
+                <th>Capacity</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for course in courses %}
+              <tr>
+                <td style="font-weight:500">{{ course.code }}</td>
+                <td>{{ course.title }}</td>
+                <td>{% if course.professor %}{{ course.professor.get_full_name|default:course.professor.username }}{% else %}—{% endif %}</td>
+                <td>{{ course.credits }}</td>
+                <td>{{ course.capacity }}</td>
+                <td class="actions">
+                  <a href="{% url 'edit_course' course.id %}" class="btn btn-ghost btn-sm">Edit</a>
+                  <a href="{% url 'delete_course' course.id %}" class="btn btn-danger btn-sm">Delete</a>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div style="padding: 24px 18px; color: var(--muted); font-size: 13px; text-align: center;">
+            No courses yet. <a href="{% url 'create_course' %}" style="color:var(--accent)">Add the first one →</a>
           </div>
-          <div class="course-cap">
-            <span class="cap-code">CS 3410</span>
-            <span class="cap-name">Data Structures & Algorithms</span>
-            <div class="cap-bar-wrap"><div class="cap-fill fill-amber" style="width:79%"></div></div>
-            <span class="cap-num c-amber">68/86</span>
-          </div>
-          <div class="course-cap">
-            <span class="cap-code">CS 4850</span>
-            <span class="cap-name">Machine Learning</span>
-            <div class="cap-bar-wrap"><div class="cap-fill fill-green" style="width:61%"></div></div>
-            <span class="cap-num c-green">42/68</span>
-          </div>
-          <div class="course-cap">
-            <span class="cap-code">CS 4320</span>
-            <span class="cap-name">Database Systems</span>
-            <div class="cap-bar-wrap"><div class="cap-fill fill-green" style="width:55%"></div></div>
-            <span class="cap-num c-green">44/80</span>
-          </div>
-          <div class="course-cap">
-            <span class="cap-code">CS 6780</span>
-            <span class="cap-name">Advanced AI — Grad</span>
-            <div class="cap-bar-wrap"><div class="cap-fill fill-amber" style="width:72%"></div></div>
-            <span class="cap-num c-amber">18/25</span>
-          </div>
+          {% endif %}
         </div>
       </div>
 

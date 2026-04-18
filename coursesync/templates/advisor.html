@@ -4,7 +4,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>{% block title %}Advisor Portal — CourseSync{% endblock %}</title>
+  <title>Advisor Portal — CourseSync</title>
   <link rel="stylesheet" href="{% static 'css/advisor.css' %}">
 </head>
 <body>
@@ -23,11 +23,7 @@
       <a class="nav-item" href="#">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
         My Students
-        <span class="notif">2</span>
-      </a>
-      <a class="nav-item" href="#">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        Appointments
+        {% if advisees %}<span class="notif">{{ advisees|length }}</span>{% endif %}
       </a>
       <div class="nav-section">Academic</div>
       <a class="nav-item" href="#">
@@ -38,30 +34,15 @@
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
         Course Catalog
       </a>
-      <a class="nav-item" href="#">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-        At-Risk Reports
-        <span class="notif">4</span>
-      </a>
-      <div class="nav-section">Tools</div>
-      <a class="nav-item" href="#">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg>
-        Messages
-      </a>
-      <a class="nav-item" href="#">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/></svg>
-        Advising Notes
-      </a>
     </nav>
     <div class="sidebar-footer">
       <div class="user-card">
         <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
         <div>
           <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
-          <div class="user-title">{{ request.user.role|default:"Authenticated User"|title }}</div>
+          <div class="user-title">{{ request.user.role|title }}</div>
         </div>
       </div>
-      
       <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
         <button type="submit" class="logout-btn">Logout</button>
@@ -72,191 +53,170 @@
   <main class="main">
     <div class="page-header">
       <div class="page-title">Advising Dashboard</div>
-      <div class="page-sub">Spring 2025 · 42 advisees · 4 flagged students</div>
+      <div class="page-sub">
+        {{ request.user.get_full_name|default:request.user.username }}
+        {% if assigned_major %} · {{ assigned_major.name }}{% endif %}
+        {% if pending_requests %} · <span style="color:var(--warn)">{{ pending_requests|length }} pending request{{ pending_requests|length|pluralize }}</span>{% endif %}
+      </div>
     </div>
 
     <div class="stats">
       <div class="stat ok">
         <div class="stat-label">Total Advisees</div>
-        <div class="stat-value">42</div>
-        <div class="stat-sub">Computer Science major</div>
+        <div class="stat-value">{{ advisees|length }}</div>
+        <div class="stat-sub">assigned to you</div>
       </div>
-      <div class="stat flag">
-        <div class="stat-label">Flagged / At-Risk</div>
-        <div class="stat-value">4</div>
-        <div class="stat-sub">Requires outreach</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Today's Appointments</div>
-        <div class="stat-value">5</div>
-        <div class="stat-sub">Next at 10:00 AM</div>
+      <div class="stat {% if pending_requests %}flag{% endif %}">
+        <div class="stat-label">Pending Requests</div>
+        <div class="stat-value">{{ pending_requests|length }}</div>
+        <div class="stat-sub">awaiting your approval</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Holds to Review</div>
-        <div class="stat-value">3</div>
-        <div class="stat-sub">Enrollment holds</div>
+        <div class="stat-label">Major</div>
+        <div class="stat-value" style="font-size:16px;letter-spacing:0">{% if assigned_major %}{{ assigned_major.name }}{% else %}—{% endif %}</div>
+        <div class="stat-sub">your field of study</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">At-Risk Students</div>
+        <div class="stat-value">
+          {% with count=0 %}
+            {% for a in advisees %}{% if a.gpa < 2.0 %}{% with count=count|add:1 %}{% endwith %}{% endif %}{% endfor %}
+          {% endwith %}
+          {{ advisees|length|add:"0" }}
+        </div>
+        <div class="stat-sub">GPA below 2.0</div>
       </div>
     </div>
 
     <div class="grid">
       <div>
-        <!-- Student roster -->
+        <!-- Pending Enrollment Requests -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header">
+            <span class="card-title">Pending Enrollment Requests</span>
+            {% if pending_requests %}<span class="notif">{{ pending_requests|length }}</span>{% endif %}
+          </div>
+          {% if pending_requests %}
+          <table style="width:100%;border-collapse:collapse">
+            <thead>
+              <tr style="background:var(--surface2)">
+                <th style="text-align:left;padding:9px 20px;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);border-bottom:1px solid var(--border)">Student</th>
+                <th style="text-align:left;padding:9px 20px;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);border-bottom:1px solid var(--border)">Course</th>
+                <th style="text-align:left;padding:9px 20px;font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);border-bottom:1px solid var(--border)">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for enrollment in pending_requests %}
+              <tr style="border-bottom:1px solid var(--border)">
+                <td style="padding:12px 20px">
+                  <div style="font-size:13.5px;font-weight:500">{{ enrollment.student.get_full_name|default:enrollment.student.username }}</div>
+                  <div style="font-size:11px;color:var(--muted)">{{ enrollment.student.university_id|default:"—" }}</div>
+                </td>
+                <td style="padding:12px 20px">
+                  <div style="font-size:13.5px;font-weight:500">{{ enrollment.course.code }}</div>
+                  <div style="font-size:11px;color:var(--muted)">{{ enrollment.course.title }} · {{ enrollment.course.credits }} cr</div>
+                </td>
+                <td style="padding:12px 20px">
+                  <div style="display:flex;gap:8px">
+                    <a href="{% url 'approve_enrollment' enrollment.id %}" style="padding:5px 12px;border-radius:7px;font-size:12px;font-weight:500;background:#EAFAF1;color:#18A449;border:1px solid #B5E8C5;text-decoration:none">Approve</a>
+                    <a href="{% url 'deny_enrollment' enrollment.id %}" style="padding:5px 12px;border-radius:7px;font-size:12px;font-weight:500;background:#FEF0F0;color:#D63B3B;border:1px solid #F5C5C5;text-decoration:none">Deny</a>
+                  </div>
+                </td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+          {% else %}
+          <div style="padding:20px;color:var(--muted);font-size:13px;text-align:center">No pending enrollment requests.</div>
+          {% endif %}
+        </div>
+
+        <!-- My Advisees -->
         <div class="card">
           <div class="card-header">
             <span class="card-title">My Advisees</span>
-            <span class="card-action">Export list →</span>
+            <span class="card-action">{{ advisees|length }} student{{ advisees|length|pluralize }}</span>
           </div>
-          <div class="search-bar">
-            <input class="search-input" type="text" placeholder="Search by name, ID, or major…">
-            <button class="filter-btn">Filter ▾</button>
-            <button class="filter-btn">Sort ▾</button>
-          </div>
+          {% if advisees %}
           <div class="stu-col-header">
             <span class="col-lbl">Student</span>
-            <span class="col-lbl">Year</span>
+            <span class="col-lbl">Major</span>
             <span class="col-lbl">GPA</span>
-            <span class="col-lbl">Credits</span>
-            <span class="col-lbl">Status</span>
+            <span class="col-lbl">Standing</span>
           </div>
+          {% for advisee in advisees %}
           <div class="student-row">
-            <div><div class="stu-name">Jordan Martinez</div><div class="stu-major">CS · STU-2024-0847</div></div>
-            <div>Junior</div>
-            <div class="gpa-val gpa-good">3.62</div>
-            <div>78</div>
-            <div><span class="flag-pill pill-green">Good standing</span></div>
+            <div>
+              <div class="stu-name">{{ advisee.user.get_full_name|default:advisee.user.username }}</div>
+              <div class="stu-major">{{ advisee.user.university_id|default:"—" }}</div>
+            </div>
+            <div style="font-size:13px">{{ advisee.major|default:"—" }}</div>
+            <div class="gpa-val {% if advisee.gpa >= 3.5 %}gpa-good{% elif advisee.gpa >= 2.0 %}gpa-mid{% else %}gpa-low{% endif %}">
+              {{ advisee.gpa }}
+            </div>
+            <div>
+              {% if advisee.gpa >= 3.5 %}
+                <span class="flag-pill pill-green">Dean's List</span>
+              {% elif advisee.gpa >= 2.0 %}
+                <span class="flag-pill pill-green">Good standing</span>
+              {% else %}
+                <span class="flag-pill pill-red">⚑ At-risk</span>
+              {% endif %}
+            </div>
           </div>
-          <div class="student-row">
-            <div><div class="stu-name">Aisha Johnson</div><div class="stu-major">CS · STU-2024-2201</div></div>
-            <div>Sophomore</div>
-            <div class="gpa-val gpa-low">1.88</div>
-            <div>31</div>
-            <div><span class="flag-pill pill-red">⚑ At-risk</span></div>
+          {% endfor %}
+          {% else %}
+          <div style="padding:24px;color:var(--muted);font-size:13px;text-align:center">
+            No students are currently assigned to you.
           </div>
-          <div class="student-row">
-            <div><div class="stu-name">Marcus Webb</div><div class="stu-major">CS · STU-2023-0341</div></div>
-            <div>Senior</div>
-            <div class="gpa-val gpa-mid">2.41</div>
-            <div>104</div>
-            <div><span class="flag-pill pill-amber">Probation</span></div>
-          </div>
-          <div class="student-row">
-            <div><div class="stu-name">Priya Sharma</div><div class="stu-major">CS · STU-2024-1023</div></div>
-            <div>Junior</div>
-            <div class="gpa-val gpa-good">3.85</div>
-            <div>82</div>
-            <div><span class="flag-pill pill-green">Dean's List</span></div>
-          </div>
-          <div class="student-row">
-            <div><div class="stu-name">Theo Okonkwo</div><div class="stu-major">CS · STU-2023-0788</div></div>
-            <div>Senior</div>
-            <div class="gpa-val gpa-mid">2.78</div>
-            <div>112</div>
-            <div><span class="flag-pill pill-green">Good standing</span></div>
-          </div>
-          <div class="student-row">
-            <div><div class="stu-name">Lena Fischer</div><div class="stu-major">CS · STU-2025-0104</div></div>
-            <div>Freshman</div>
-            <div class="gpa-val gpa-low">1.60</div>
-            <div>14</div>
-            <div><span class="flag-pill pill-red">⚑ At-risk</span></div>
-          </div>
-          <div style="padding: 12px 20px; display: flex; justify-content: center; border-top: 1px solid var(--border);">
-            <button class="btn btn-ghost" style="font-size:12px;">View all 42 students →</button>
-          </div>
-        </div>
-
-        <!-- Degree Audit preview -->
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">Degree Audit — Jordan Martinez</span>
-            <span class="card-action">Full audit →</span>
-          </div>
-          <div class="audit-section">
-            <div class="audit-category">Core Requirements</div>
-            <div class="audit-req"><span>CS 1110 — Intro to Computing</span><span class="req-check">✓ Complete</span></div>
-            <div class="audit-req"><span>CS 2110 — OOP & Data Structures</span><span class="req-check">✓ Complete</span></div>
-            <div class="audit-req"><span>CS 3410 — Systems Programming</span><span class="req-partial">↻ In progress</span></div>
-            <div class="audit-req"><span>CS 4820 — Algorithms</span><span class="req-x">✗ Not taken</span></div>
-          </div>
-          <div class="audit-section">
-            <div class="audit-category">Math Requirements</div>
-            <div class="audit-req"><span>MATH 1910 — Calculus I</span><span class="req-check">✓ Complete</span></div>
-            <div class="audit-req"><span>MATH 1920 — Calculus II</span><span class="req-check">✓ Complete</span></div>
-            <div class="audit-req"><span>MATH 2940 — Linear Algebra</span><span class="req-partial">↻ In progress</span></div>
-            <div class="audit-req"><span>MATH 2930 — Differential Equations</span><span class="req-x">✗ Not taken</span></div>
-          </div>
+          {% endif %}
         </div>
       </div>
 
       <!-- Right column -->
       <div>
-        <!-- Appointments -->
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">Today's Appointments</span>
-            <span class="card-action">Manage schedule →</span>
-          </div>
-          <div class="appt-item">
-            <div class="appt-time"><div class="appt-time-main">9:00</div><div class="appt-time-ampm">AM</div></div>
-            <div class="appt-divider"></div>
-            <div><div class="appt-name">Priya Sharma</div><div class="appt-topic">Grad school planning</div></div>
-            <div class="appt-type type-virtual">Virtual</div>
-          </div>
-          <div class="appt-item">
-            <div class="appt-time"><div class="appt-time-main">10:00</div><div class="appt-time-ampm">AM</div></div>
-            <div class="appt-divider"></div>
-            <div><div class="appt-name">Aisha Johnson</div><div class="appt-topic">Academic recovery plan</div></div>
-            <div class="appt-type type-in">In person</div>
-          </div>
-          <div class="appt-item">
-            <div class="appt-time"><div class="appt-time-main">11:00</div><div class="appt-time-ampm">AM</div></div>
-            <div class="appt-divider"></div>
-            <div class="appt-empty">— Open slot —</div>
-          </div>
-          <div class="appt-item">
-            <div class="appt-time"><div class="appt-time-main">2:00</div><div class="appt-time-ampm">PM</div></div>
-            <div class="appt-divider"></div>
-            <div><div class="appt-name">Theo Okonkwo</div><div class="appt-topic">Graduation audit review</div></div>
-            <div class="appt-type type-in">In person</div>
-          </div>
-          <div class="appt-item">
-            <div class="appt-time"><div class="appt-time-main">3:00</div><div class="appt-time-ampm">PM</div></div>
-            <div class="appt-divider"></div>
-            <div><div class="appt-name">Jordan Martinez</div><div class="appt-topic">Fall 2025 course planning</div></div>
-            <div class="appt-type type-virtual">Virtual</div>
-          </div>
-          <div style="padding: 12px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px;">
-            <button class="btn btn-primary" style="flex:1">+ New Appointment</button>
+        <!-- Advisor info -->
+        <div class="card" style="margin-bottom:14px">
+          <div class="card-header"><span class="card-title">Your Profile</span></div>
+          <div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+            <div>
+              <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:3px">Name</div>
+              <div style="font-size:13.5px;font-weight:500">{{ request.user.get_full_name|default:request.user.username }}</div>
+            </div>
+            <div>
+              <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:3px">Field of Study</div>
+              <div style="font-size:13.5px;font-weight:500">{% if assigned_major %}{{ assigned_major.name }}{% else %}<span style="color:var(--muted)">Not assigned to a major</span>{% endif %}</div>
+            </div>
+            <div>
+              <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:3px">Email</div>
+              <div style="font-size:13.5px">{{ request.user.email|default:"—" }}</div>
+            </div>
           </div>
         </div>
 
-        <!-- Recent Notes -->
+        <!-- Enrolled courses per advisee -->
         <div class="card">
-          <div class="card-header">
-            <span class="card-title">Recent Advising Notes</span>
-            <span class="card-action">All notes →</span>
+          <div class="card-header"><span class="card-title">Advisee Enrollments</span></div>
+          {% if advisees %}
+          {% for advisee in advisees %}
+          <div style="padding:12px 20px;border-bottom:1px solid var(--border)">
+            <div style="font-size:13px;font-weight:500;margin-bottom:6px">{{ advisee.user.get_full_name|default:advisee.user.username }}</div>
+            {% with approved=advisee.user.enrollments.all %}
+            {% if approved %}
+            {% for e in approved %}
+            {% if e.status == "approved" %}
+            <div style="font-size:11.5px;color:var(--muted);margin-bottom:2px">{{ e.course.code }} — {{ e.course.title }}</div>
+            {% endif %}
+            {% endfor %}
+            {% else %}
+            <div style="font-size:11.5px;color:var(--muted)">No approved enrollments</div>
+            {% endif %}
+            {% endwith %}
           </div>
-          <div class="note-item">
-            <div class="note-header">
-              <span class="note-student">Aisha Johnson</span>
-              <span class="note-date">Apr 10</span>
-            </div>
-            <div class="note-text">Discussed academic recovery plan. Student will attend tutoring 3x/week. Follow-up scheduled for Apr 24. Consider withdrawal from MATH 2940 if no improvement by Week 12.</div>
-          </div>
-          <div class="note-item">
-            <div class="note-header">
-              <span class="note-student">Marcus Webb</span>
-              <span class="note-date">Apr 8</span>
-            </div>
-            <div class="note-text">Senior on probation. Confirmed all credits on track for May graduation. Needs B or better in CS 4820 to clear academic probation status.</div>
-          </div>
-          <div class="note-item">
-            <div class="note-header">
-              <span class="note-student">Priya Sharma</span>
-              <span class="note-date">Apr 3</span>
-            </div>
-            <div class="note-text">Discussing MIT and Stanford CS PhD programs. Strong candidate — recommended letters from Prof. Nakamura and Prof. Rodriguez.</div>
-          </div>
+          {% endfor %}
+          {% else %}
+          <div style="padding:20px;color:var(--muted);font-size:13px;text-align:center">No advisees to display.</div>
+          {% endif %}
         </div>
       </div>
     </div>
