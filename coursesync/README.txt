@@ -1,5 +1,33 @@
 CourseSync Django Template Conversion
 
+*IMPORTANT*
+Delete the file called "db.sqlite3"
+
+HOW TO RUN:
+cd into coursesync
+python -m venv .venv                *not necessary*
+.venv\Scripts\activate              *not necessary*
+pip install -r requirements.txt
+python manage.py makemigrations
+python manage.py migrate
+python manage.py runserver
+
+
+CREATE A SUPERUSER
+python manage.py createsuperuser
+
+CREATE SAMPLE ROLE USERS
+python manage.py shell
+
+from accounts.models import User
+
+User.objects.create_user(username="student1", password="test1234", role="student")
+User.objects.create_user(username="prof1", password="test1234", role="professor")
+User.objects.create_user(username="advisor1", password="test1234", role="advisor")
+User.objects.create_user(username="registrar1", password="test1234", role="registrar")
+User.objects.create_user(username="sysadmin1", password="test1234", role="sysadmin")
+exit()
+
 Contents
 - templates/
   - base.html
