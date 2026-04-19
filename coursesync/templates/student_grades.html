@@ -1,0 +1,197 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Grades & GPA — CourseSync</title>
+  <link rel="stylesheet" href="{% static 'css/student.css' %}">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">CourseSync</div>
+      <div class="brand-role">Student Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Overview</div>
+      <a class="nav-item" href="{% url 'student_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="{% url 'my_courses' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h8M4 18h8"/></svg>
+        My Courses
+      </a>
+      <div class="nav-section">Academic</div>
+      <a class="nav-item active" href="{% url 'student_grades' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Grades & GPA
+      </a>
+      <a class="nav-item" href="{% url 'enrollment_history' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Enrollment
+      </a>
+      <div class="nav-section">Support</div>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        My Advisor
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+        <div>
+          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="user-id">{{ request.user.university_id|default:request.user.username }}</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">Logout</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">Grades & GPA</div>
+      <div class="page-sub">{% if profile %}{{ profile.major }}{% endif %}</div>
+    </div>
+
+    {% if at_risk %}
+    <div style="background:#FEF0E8;border:1px solid #E8894A;border-left:4px solid var(--warn);border-radius:var(--radius);padding:14px 18px;margin-bottom:24px;display:flex;align-items:flex-start;gap:12px">
+      <svg width="20" height="20" fill="none" stroke="var(--warn)" stroke-width="2" viewBox="0 0 24 24" style="flex-shrink:0;margin-top:1px"><path d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+      <div>
+        <div style="font-size:13.5px;font-weight:500;color:var(--warn);margin-bottom:2px">Academic Warning — GPA Below 2.0</div>
+        <div style="font-size:12.5px;color:var(--warn);opacity:0.85">Your current GPA of <strong>{{ gpa }}</strong> is below the minimum required standing of 2.0. Please contact your advisor.</div>
+      </div>
+    </div>
+    {% endif %}
+
+    <div style="display:grid;grid-template-columns:1fr 260px;gap:20px;align-items:start">
+      <div>
+        <!-- Current semester grades -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header"><span class="card-title">Current Enrollments</span></div>
+          {% if graded_rows %}
+          <div class="col-header" style="grid-template-columns:3fr 1fr 1fr 1fr">
+            <span class="col-label">Course</span>
+            <span class="col-label">Credits</span>
+            <span class="col-label">Professor</span>
+            <span class="col-label">Grade</span>
+          </div>
+          <div class="card-body">
+            {% for row in graded_rows %}
+            <a href="{% url 'student_course_detail' row.enrollment.id %}" style="text-decoration:none;color:inherit;display:contents">
+            <div class="course-row" style="grid-template-columns:3fr 1fr 1fr 1fr">
+              <div>
+                <div class="course-name">{{ row.course.title }}</div>
+                <div class="course-code">{{ row.course.code }}</div>
+              </div>
+              <div style="font-size:13px">{{ row.course.credits }}</div>
+              <div style="font-size:13px">{{ row.course.professor.get_full_name|default:"TBA" }}</div>
+              <div>
+                {% if row.grade and row.grade.final_grade %}
+                  {% with g=row.grade.final_grade %}
+                  <span class="grade-badge {% if g == 'A' or g == 'A-' %}grade-a{% elif g == 'B+' or g == 'B' or g == 'B-' %}grade-b{% else %}grade-c{% endif %}">{{ g }}</span>
+                  {% endwith %}
+                {% else %}
+                  <span style="font-size:12px;color:var(--muted)">Pending</span>
+                {% endif %}
+              </div>
+            </div>
+            </a>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div style="padding:32px 20px;text-align:center;color:var(--muted);font-size:13px">No active enrollments.</div>
+          {% endif %}
+        </div>
+
+        <!-- Transfer / transcript entries -->
+        {% if transcript_entries %}
+        <div class="card">
+          <div class="card-header"><span class="card-title">Transfer & Prior Credit</span></div>
+          <div class="col-header" style="grid-template-columns:3fr 1fr 1fr">
+            <span class="col-label">Course</span>
+            <span class="col-label">Credits</span>
+            <span class="col-label">Grade</span>
+          </div>
+          <div class="card-body">
+            {% for entry in transcript_entries %}
+            <div class="course-row" style="grid-template-columns:3fr 1fr 1fr">
+              <div>
+                <div class="course-name">{{ entry.course_name }}</div>
+                <div class="course-code">{{ entry.course_code }}</div>
+              </div>
+              <div style="font-size:13px">{{ entry.credits }}</div>
+              <div>
+                {% with g=entry.grade %}
+                <span class="grade-badge {% if g == 'A' or g == 'A-' %}grade-a{% elif g == 'B+' or g == 'B' or g == 'B-' %}grade-b{% else %}grade-c{% endif %}">{{ g }}</span>
+                {% endwith %}
+              </div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+      </div>
+
+      <!-- GPA panel -->
+      <div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">GPA Summary</span></div>
+          <div class="gpa-display">
+            {% if gpa is not None %}
+              {% with gpa_pct=gpa|floatformat:2 %}
+              <div class="gpa-ring">
+                <svg width="120" height="120" viewBox="0 0 120 120">
+                  <circle cx="60" cy="60" r="52" fill="none" stroke="var(--border)" stroke-width="10"/>
+                  <circle cx="60" cy="60" r="52" fill="none"
+                    stroke="{% if at_risk %}var(--warn){% else %}var(--accent){% endif %}"
+                    stroke-width="10"
+                    stroke-dasharray="326.73"
+                    stroke-dashoffset="{% widthratio gpa 4.0 326.73 as filled %}{{ 326.73|floatformat:2|add:"0" }}"
+                    style="stroke-dashoffset: calc(326.73px - (326.73px * {{ gpa }} / 4.0));"
+                    stroke-linecap="round"/>
+                </svg>
+                <div class="gpa-center">
+                  <div class="gpa-number">{{ gpa }}</div>
+                  <div class="gpa-label">GPA</div>
+                </div>
+              </div>
+              {% endwith %}
+              <div class="standing-badge" style="{% if at_risk %}background:var(--warn-light);color:var(--warn);{% endif %}">
+                {% if gpa >= 3.5 %}Dean's List
+                {% elif gpa >= 2.0 %}Good Standing
+                {% else %}Academic Warning{% endif %}
+              </div>
+            {% else %}
+              <div style="font-size:13px;color:var(--muted);padding:20px 0">No GPA calculated yet.</div>
+            {% endif %}
+          </div>
+          <div style="border-top:1px solid var(--border);padding:16px 20px;display:flex;flex-direction:column;gap:10px">
+            <div style="display:flex;justify-content:space-between;font-size:13px">
+              <span style="color:var(--muted)">Cumulative GPA</span>
+              <span style="font-weight:500">{{ gpa|default:"—" }}</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;font-size:13px">
+              <span style="color:var(--muted)">Graded Courses</span>
+              <span style="font-weight:500">{% with cnt=0 %}{% for r in graded_rows %}{% if r.grade and r.grade.final_grade %}{% with cnt=cnt|add:1 %}{% endwith %}{% endif %}{% endfor %}{{ graded_rows|length }}{% endwith %}</span>
+            </div>
+            {% if transcript_entries %}
+            <div style="display:flex;justify-content:space-between;font-size:13px">
+              <span style="color:var(--muted)">Transfer Credits</span>
+              <span style="font-weight:500">{{ transcript_entries|length }} course{{ transcript_entries|length|pluralize }}</span>
+            </div>
+            {% endif %}
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

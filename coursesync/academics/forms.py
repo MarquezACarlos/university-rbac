@@ -95,6 +95,58 @@ class CreateUserForm(forms.Form):
 CreateStudentForm = CreateUserForm
 
 
+class EditUserForm(forms.ModelForm):
+    ROLE_CHOICES = [
+        ("student", "Student"),
+        ("professor", "Professor"),
+        ("advisor", "Advisor"),
+        ("registrar", "Registrar"),
+        ("sysadmin", "Sys Admin"),
+    ]
+
+    role = forms.ChoiceField(choices=ROLE_CHOICES)
+    new_password = forms.CharField(
+        widget=forms.PasswordInput,
+        required=False,
+        label="New Password",
+        help_text="Leave blank to keep current password.",
+    )
+
+    class Meta:
+        model = User
+        fields = ["first_name", "last_name", "username", "email", "university_id", "role"]
+
+    def clean_username(self):
+        username = self.cleaned_data["username"]
+        qs = User.objects.filter(username=username).exclude(pk=self.instance.pk)
+        if qs.exists():
+            raise forms.ValidationError("A user with this username already exists.")
+        return username
+
+    def clean_university_id(self):
+        uid = self.cleaned_data.get("university_id")
+        if uid:
+            qs = User.objects.filter(university_id=uid).exclude(pk=self.instance.pk)
+            if qs.exists():
+                raise forms.ValidationError("This university ID is already taken.")
+        return uid
+
+    def clean_new_password(self):
+        password = self.cleaned_data.get("new_password")
+        if password:
+            validate_password(password)
+        return password
+
+    def save(self, commit=True):
+        user = super().save(commit=False)
+        password = self.cleaned_data.get("new_password")
+        if password:
+            user.set_password(password)
+        if commit:
+            user.save()
+        return user
+
+
 class MajorForm(forms.ModelForm):
     advisor = forms.ModelChoiceField(
         queryset=User.objects.none(),  # set in __init__

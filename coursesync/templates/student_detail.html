@@ -1,0 +1,204 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ student.get_full_name }} — Advisor Portal</title>
+  <link rel="stylesheet" href="{% static 'css/advisor.css' %}">
+  <style>
+    .section-title { font-size: 13px; font-weight: 600; color: var(--muted); text-transform: uppercase; letter-spacing: 0.8px; margin: 24px 0 10px; }
+    .enroll-table { width: 100%; border-collapse: collapse; }
+    .enroll-table th { text-align: left; padding: 9px 20px; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--surface2); }
+    .enroll-table td { padding: 12px 20px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+    .enroll-table tr:last-child td { border-bottom: none; }
+    .enroll-table tr:hover td { background: var(--surface2); }
+    .course-name { font-weight: 500; font-size: 13.5px; }
+    .course-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .btn-drop { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; background: #FEF0F0; color: #D63B3B; border: 1px solid #F5C5C5; cursor: pointer; font-family: inherit; }
+    .btn-drop:hover { background: #D63B3B; color: white; }
+    .pill-denied { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; background: #FEF0F0; color: #D63B3B; border: 1px solid #F5C5C5; }
+    .pill-approved { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; background: #EAFAF1; color: #18A449; border: 1px solid #B5E8C5; }
+    .empty { padding: 20px; color: var(--muted); font-size: 13px; text-align: center; }
+    .profile-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; padding: 16px 20px; }
+    .profile-field { display: flex; flex-direction: column; gap: 3px; }
+    .profile-label { font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); }
+    .profile-value { font-size: 13.5px; font-weight: 500; }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">CourseSync</div>
+      <div class="brand-role">Advisor Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Overview</div>
+      <a class="nav-item" href="{% url 'advisor_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item active" href="{% url 'advisor_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+        My Students
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+        <div>
+          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="user-title">{{ request.user.role|title }}</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">Logout</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">{{ student.get_full_name|default:student.username }}</div>
+        <div class="page-sub">
+          {% if student.university_id %}{{ student.university_id }} · {% endif %}
+          {% if profile %}{{ profile.major }}{% endif %}
+        </div>
+      </div>
+      <a href="{% url 'advisor_dashboard' %}" style="padding:7px 16px;border-radius:7px;font-size:13px;border:1px solid var(--border);background:var(--surface2);color:var(--text);text-decoration:none">← Back</a>
+    </div>
+
+    <!-- Student profile summary -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header"><span class="card-title">Student Profile</span></div>
+      <div class="profile-grid">
+        <div class="profile-field">
+          <span class="profile-label">Full Name</span>
+          <span class="profile-value">{{ student.get_full_name|default:"—" }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">University ID</span>
+          <span class="profile-value">{{ student.university_id|default:"—" }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Email</span>
+          <span class="profile-value">{{ student.email|default:"—" }}</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Major</span>
+          <span class="profile-value">{% if profile %}{{ profile.major }}{% else %}—{% endif %}</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">GPA</span>
+          <span class="profile-value">{% if profile %}{{ profile.gpa }}{% else %}—{% endif %}</span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Standing</span>
+          <span class="profile-value">
+            {% if profile %}
+              {% if profile.gpa >= 3.5 %}Dean's List
+              {% elif profile.gpa >= 2.0 %}Good Standing
+              {% else %}At-Risk
+              {% endif %}
+            {% else %}—{% endif %}
+          </span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Credits Enrolled</span>
+          <span class="profile-value">{{ credits_enrolled }} <span style="font-size:12px;font-weight:400;color:var(--muted)">/ 20 max</span></span>
+        </div>
+        <div class="profile-field">
+          <span class="profile-label">Credits Earned</span>
+          <span class="profile-value">{{ credits_earned }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Current enrollments -->
+    <div class="card" style="margin-bottom:20px">
+      <div class="card-header">
+        <span class="card-title">Current Enrollments</span>
+        <span class="card-action">{{ approved_enrollments|length }} course{{ approved_enrollments|length|pluralize }}</span>
+      </div>
+      {% if approved_enrollments %}
+      <table class="enroll-table">
+        <thead>
+          <tr>
+            <th>Course</th>
+            <th>Credits</th>
+            <th>Professor</th>
+            <th>Status</th>
+            <th>Action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for enrollment in approved_enrollments %}
+          <tr>
+            <td>
+              <div class="course-name">{{ enrollment.course.title }}</div>
+              <div class="course-meta">{{ enrollment.course.code }}</div>
+            </td>
+            <td>{{ enrollment.course.credits }}</td>
+            <td>{{ enrollment.course.professor.get_full_name|default:"TBA" }}</td>
+            <td><span class="pill-approved">Enrolled</span></td>
+            <td>
+              <form method="post" action="{% url 'drop_enrollment' enrollment.id %}">
+                {% csrf_token %}
+                <button type="submit" class="btn-drop"
+                  onclick="return confirm('Drop {{ enrollment.course.code }} for {{ student.get_full_name }}?')">
+                  Drop
+                </button>
+              </form>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty">No current enrollments.</div>
+      {% endif %}
+    </div>
+
+    <!-- Enrollment history -->
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Enrollment History</span>
+        <span class="card-action">{{ denied_enrollments|length }} denied</span>
+      </div>
+      {% if denied_enrollments %}
+      <table class="enroll-table">
+        <thead>
+          <tr>
+            <th>Course</th>
+            <th>Credits</th>
+            <th>Professor</th>
+            <th>Status</th>
+            <th>Reviewed By</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for enrollment in denied_enrollments %}
+          <tr>
+            <td>
+              <div class="course-name">{{ enrollment.course.title }}</div>
+              <div class="course-meta">{{ enrollment.course.code }}</div>
+            </td>
+            <td>{{ enrollment.course.credits }}</td>
+            <td>{{ enrollment.course.professor.get_full_name|default:"TBA" }}</td>
+            <td><span class="pill-denied">Denied</span></td>
+            <td style="color:var(--muted);font-size:12px">{{ enrollment.reviewed_by.get_full_name|default:"—" }}</td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div class="empty">No enrollment history.</div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+</body>
+</html>

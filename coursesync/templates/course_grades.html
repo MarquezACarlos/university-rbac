@@ -1,0 +1,117 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ course.code }} Grade Entry — CourseSync</title>
+  <link rel="stylesheet" href="{% static 'css/professor.css' %}">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">CourseSync</div>
+      <div class="brand-role">Faculty Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Teaching</div>
+      <a class="nav-item" href="{% url 'professor_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <div class="nav-section">Grading</div>
+      <a class="nav-item active" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        Grade Entry
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+        <div>
+          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="user-title">{{ request.user.role|default:"Authenticated User"|title }}</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">Logout</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">{{ course.code }} — {{ course.title }}</div>
+        <div class="page-sub">{{ grade_rows|length }} enrolled student{{ grade_rows|length|pluralize }} · {{ course.credits }} credit{{ course.credits|pluralize }}</div>
+      </div>
+      <div class="header-actions">
+        <a href="{% url 'professor_dashboard' %}" class="btn btn-ghost">← Back to Dashboard</a>
+      </div>
+    </div>
+
+    {% if messages %}
+    {% for message in messages %}
+    <div style="background:var(--green-dim);border:1px solid var(--green);color:var(--green);border-radius:var(--radius);padding:12px 16px;margin-bottom:20px;font-size:13px;">
+      {{ message }}
+    </div>
+    {% endfor %}
+    {% endif %}
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Final Grades</span>
+        <span style="font-size:12px;color:var(--muted);">Select a grade or leave blank to clear</span>
+      </div>
+      {% if grade_rows %}
+      <form method="post">
+        {% csrf_token %}
+        <table class="grade-table">
+          <thead>
+            <tr>
+              <th>Student</th>
+              <th>ID</th>
+              <th>Final Grade</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody>
+            {% for row in grade_rows %}
+            <tr>
+              <td><div class="student-name">{{ row.student.get_full_name|default:row.student.username }}</div></td>
+              <td><div class="student-id">{{ row.student.university_id|default:"—" }}</div></td>
+              <td>
+                <select name="grade_{{ row.enrollment.id }}" class="grade-input" style="width:90px;">
+                  <option value="">—</option>
+                  {% for g in grade_choices %}
+                  <option value="{{ g }}"{% if row.final_grade == g %} selected{% endif %}>{{ g }}</option>
+                  {% endfor %}
+                </select>
+              </td>
+              <td>
+                {% if row.status == "graded" %}
+                  <span class="status-dot dot-green"></span>Graded
+                {% elif row.status == "at_risk" %}
+                  <span class="status-dot dot-red"></span>At risk
+                {% else %}
+                  <span class="status-dot dot-amber"></span>Pending
+                {% endif %}
+              </td>
+            </tr>
+            {% endfor %}
+          </tbody>
+        </table>
+        <div style="padding:14px 16px;display:flex;justify-content:flex-end;border-top:1px solid var(--border);">
+          <button type="submit" class="btn btn-primary">Save Grades</button>
+        </div>
+      </form>
+      {% else %}
+      <div style="padding:24px;color:var(--muted);font-size:13px;">No students are enrolled in this course.</div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+</body>
+</html>

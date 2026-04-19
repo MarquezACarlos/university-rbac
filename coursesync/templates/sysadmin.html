@@ -35,11 +35,11 @@
         Audit Log
       </a>
       <div class="nav-section">Access Control</div>
-      <a class="nav-item" href="#">
+      <a class="nav-item" href="{% url 'users_list' %}">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
         Users & Roles
       </a>
-      <a class="nav-item" href="#">
+      <a class="nav-item" href="{% url 'rbac_policies' %}">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
         RBAC Policies
       </a>
@@ -127,6 +127,7 @@
                 <th>Role</th>
                 <th>Major / Department</th>
                 <th>Status</th>
+                <th>Actions</th>
               </tr>
             </thead>
             <tbody>
@@ -149,6 +150,12 @@
                   {% else %}{{ user.role|title }}{% endif %}
                 </td>
                 <td><span class="status-active">● active</span></td>
+                <td style="white-space:nowrap">
+                  <a href="{% url 'edit_user' user.id %}" class="btn btn-ghost" style="font-size:11px;padding:4px 10px;font-family:var(--mono)">edit</a>
+                  {% if user != request.user %}
+                  <a href="{% url 'delete_user' user.id %}" class="btn btn-ghost" style="font-size:11px;padding:4px 10px;font-family:var(--mono);color:var(--red);border-color:var(--red)">delete</a>
+                  {% endif %}
+                </td>
               </tr>
               {% empty %}
               <tr><td colspan="4" style="padding:16px;color:var(--muted);text-align:center">No users found.</td></tr>
@@ -212,62 +219,6 @@
 
       <!-- Right column -->
       <div>
-        <!-- System Health -->
-        <div class="card">
-          <div class="card-header"><span class="card-title">// system_health</span></div>
-          <div class="health-row">
-            <span class="health-name">API latency</span>
-            <div class="health-bar"><div class="hb-fill" style="width:22%;background:var(--green)"></div></div>
-            <span class="health-val c-green">112ms</span>
-          </div>
-          <div class="health-row">
-            <span class="health-name">DB connections</span>
-            <div class="health-bar"><div class="hb-fill" style="width:48%;background:var(--green)"></div></div>
-            <span class="health-val c-green">48/100</span>
-          </div>
-          <div class="health-row">
-            <span class="health-name">CPU usage</span>
-            <div class="health-bar"><div class="hb-fill" style="width:61%;background:var(--amber)"></div></div>
-            <span class="health-val c-amber">61%</span>
-          </div>
-          <div class="health-row">
-            <span class="health-name">Memory</span>
-            <div class="health-bar"><div class="hb-fill" style="width:54%;background:var(--green)"></div></div>
-            <span class="health-val c-green">54%</span>
-          </div>
-          <div class="health-row">
-            <span class="health-name">Disk I/O</span>
-            <div class="health-bar"><div class="hb-fill" style="width:32%;background:var(--green)"></div></div>
-            <span class="health-val c-green">32%</span>
-          </div>
-          <div class="health-row">
-            <span class="health-name">Last backup</span>
-            <div style="flex:1"></div>
-            <span class="health-val c-green" style="font-size:11px">2h ago ✓</span>
-          </div>
-        </div>
-
-        <!-- SOD Constraint Violations -->
-        <div class="card">
-          <div class="card-header" style="border-left: 2px solid var(--red);">
-            <span class="card-title" style="color:var(--red)">// sod_violations</span>
-            <span class="card-action">Review all →</span>
-          </div>
-          <div class="violation-item">
-            <div class="violation-code">SOD-001: PROF+STUDENT</div>
-            <div class="violation-text">User t.chen holds PROFESSOR + STUDENT roles in CS 3410 simultaneously</div>
-            <div class="violation-time">Detected 09:14 today · <span style="color:var(--amber)">Unresolved</span></div>
-          </div>
-          <div class="violation-item">
-            <div class="violation-code">SOD-002: REG_SELF_APPROVE</div>
-            <div class="violation-text">k.park attempted to approve own enrollment override request</div>
-            <div class="violation-time">Detected 11:31 today · <span style="color:var(--red)">Blocked by system</span></div>
-          </div>
-          <div style="padding: 10px 14px; border-top: 1px solid var(--border);">
-            <button class="btn btn-ghost" style="width:100%;font-size:11px;font-family:var(--mono)">resolve violations →</button>
-          </div>
-        </div>
-
         <!-- Role Distribution -->
         <div class="card">
           <div class="card-header"><span class="card-title">// role_distribution</span></div>

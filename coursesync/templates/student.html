@@ -21,26 +21,18 @@
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Dashboard
       </a>
-      <a class="nav-item" href="#">
+      <a class="nav-item" href="{% url 'my_courses' %}">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h8M4 18h8"/></svg>
         My Courses
       </a>
-      <a class="nav-item" href="#">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M8 6h13M8 12h13M8 18h13M3 6h.01M3 12h.01M3 18h.01"/></svg>
-        Schedule
-      </a>
       <div class="nav-section">Academic</div>
-      <a class="nav-item" href="#">
+      <a class="nav-item" href="{% url 'student_grades' %}">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
         Grades & GPA
       </a>
-      <a class="nav-item" href="#">
+      <a class="nav-item" href="{% url 'enrollment_history' %}">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
         Enrollment
-      </a>
-      <a class="nav-item" href="#">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-        Transcript
       </a>
       <div class="nav-section">Support</div>
       <a class="nav-item" href="#">
@@ -85,15 +77,15 @@
         <div class="stat-value">{% if profile %}{{ profile.gpa }}{% else %}—{% endif %}</div>
         <div class="stat-sub">current standing</div>
       </div>
-      <div class="stat warn">
-        <div class="stat-label">Pending Requests</div>
-        <div class="stat-value">{{ pending_enrollments|length }}</div>
-        <div class="stat-sub">awaiting advisor review</div>
+      <div class="stat">
+        <div class="stat-label">Credits Enrolled</div>
+        <div class="stat-value">{{ credits_enrolled }}</div>
+        <div class="stat-sub">of 20 max this semester</div>
       </div>
       <div class="stat">
-        <div class="stat-label">Available Courses</div>
-        <div class="stat-value">{{ available_courses|length }}</div>
-        <div class="stat-sub">open for request</div>
+        <div class="stat-label">Credits Earned</div>
+        <div class="stat-value">{{ credits_earned }}</div>
+        <div class="stat-sub">completed &amp; graded</div>
       </div>
     </div>
 
@@ -156,32 +148,6 @@
         </div>
         {% endif %}
 
-        <!-- Course Catalog -->
-        <div class="card" id="catalog">
-          <div class="card-header">
-            <span class="card-title">Course Catalog</span>
-            <span class="card-sub" style="font-size:12px;color:var(--muted)">Request a course — your advisor must approve</span>
-          </div>
-          {% if available_courses %}
-          <div class="card-body">
-            {% for course in available_courses %}
-            <div style="display:flex;align-items:flex-start;padding:14px 20px;border-bottom:1px solid var(--border);gap:12px">
-              <div style="flex:1">
-                <div class="course-name">{{ course.title }}</div>
-                <div class="course-code">{{ course.code }} · {{ course.credits }} credits{% if course.professor %} · {{ course.professor.get_full_name }}{% endif %}</div>
-                {% if course.description %}<div style="font-size:12px;color:var(--muted);margin-top:4px">{{ course.description }}</div>{% endif %}
-              </div>
-              <form method="post" action="{% url 'propose_enrollment' course.id %}" style="flex-shrink:0">
-                {% csrf_token %}
-                <button type="submit" class="btn btn-primary btn-sm">Request</button>
-              </form>
-            </div>
-            {% endfor %}
-          </div>
-          {% else %}
-          <div style="padding:20px;color:var(--muted);font-size:13px;text-align:center">No additional courses available to request.</div>
-          {% endif %}
-        </div>
       </div>
 
       <!-- Right column -->
@@ -212,7 +178,7 @@
         <div class="enroll-card">
           <div class="enroll-title">Register for Courses</div>
           <div class="enroll-sub">Browse the catalog and submit requests to your advisor</div>
-          <a href="#catalog" class="enroll-btn" style="display:block;text-align:center;text-decoration:none">Browse Course Catalog</a>
+          <a href="{% url 'course_catalog' %}" class="enroll-btn" style="display:block;text-align:center;text-decoration:none">Browse Course Catalog</a>
         </div>
       </div>
     </div>

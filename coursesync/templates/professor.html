@@ -101,7 +101,7 @@
           </div>
           <div class="course-grid">
             {% for course in courses %}
-            <div class="course-card">
+            <a href="{% url 'professor_course_grades' course.id %}" class="course-card" style="text-decoration:none;color:inherit;display:block;">
               <div class="course-tag">{{ course.code }}</div>
               <div class="course-name">{{ course.title }}</div>
               <div class="course-meta">{{ course.credits }} credit{{ course.credits|pluralize }}{% if course.capacity %} · Cap: {{ course.capacity }}{% endif %}</div>
@@ -109,113 +109,16 @@
                 <div class="cs-item"><div class="cs-val">{{ course.student_count }}</div><div class="cs-lbl">Students</div></div>
                 <div class="cs-item"><div class="cs-val">{{ course.credits }}</div><div class="cs-lbl">Credits</div></div>
               </div>
-            </div>
+            </a>
             {% empty %}
             <div style="padding:20px;color:var(--muted);font-size:13px;grid-column:span 2">No courses assigned yet.</div>
             {% endfor %}
-          </div>
-        </div>
-
-        <!-- Grade entry -->
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">Grade Entry — CS 3410 · Midterm 2</span>
-            <span class="card-action">Open full gradebook →</span>
-          </div>
-          <table class="grade-table">
-            <thead>
-              <tr>
-                <th>Student</th>
-                <th>ID</th>
-                <th>Midterm 1</th>
-                <th>Midterm 2</th>
-                <th>Status</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr>
-                <td><div class="student-name">Jordan Martinez</div></td>
-                <td><div class="student-id">STU-2024-0847</div></td>
-                <td>88</td>
-                <td><input class="grade-input" type="text" placeholder="—" value="91"/></td>
-                <td><span class="status-dot dot-green"></span>Graded</td>
-              </tr>
-              <tr>
-                <td><div class="student-name">Priya Sharma</div></td>
-                <td><div class="student-id">STU-2024-1023</div></td>
-                <td>92</td>
-                <td><input class="grade-input" type="text" placeholder="—"/></td>
-                <td><span class="status-dot dot-amber"></span>Pending</td>
-              </tr>
-              <tr>
-                <td><div class="student-name">Marcus Webb</div></td>
-                <td><div class="student-id">STU-2023-0341</div></td>
-                <td>71</td>
-                <td><input class="grade-input" type="text" placeholder="—"/></td>
-                <td><span class="status-dot dot-amber"></span>Pending</td>
-              </tr>
-              <tr>
-                <td><div class="student-name">Aisha Johnson</div></td>
-                <td><div class="student-id">STU-2024-2201</div></td>
-                <td>55</td>
-                <td><input class="grade-input" type="text" placeholder="—"/></td>
-                <td><span class="status-dot dot-red"></span>At risk</td>
-              </tr>
-              <tr>
-                <td><div class="student-name">Theo Okonkwo</div></td>
-                <td><div class="student-id">STU-2023-0788</div></td>
-                <td>84</td>
-                <td><input class="grade-input" type="text" placeholder="—" value="87"/></td>
-                <td><span class="status-dot dot-green"></span>Graded</td>
-              </tr>
-            </tbody>
-          </table>
-          <div style="padding: 14px 16px; display: flex; justify-content: flex-end; gap: 10px; border-top: 1px solid var(--border);">
-            <button class="btn btn-ghost">Save Draft</button>
-            <button class="btn btn-primary">Submit Grades</button>
           </div>
         </div>
       </div>
 
       <!-- Right column -->
       <div>
-        <!-- Action Items -->
-        <div class="card">
-          <div class="card-header"><span class="card-title">Action Items</span></div>
-          <div class="pending-item">
-            <div class="pending-icon pi-red"><svg width="16" height="16" fill="none" stroke="var(--red)" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/></svg></div>
-            <div>
-              <div class="pending-title">Final grades due</div>
-              <div class="pending-sub">CS 3410 · 12 students ungraded</div>
-            </div>
-            <div class="pending-time">5 days</div>
-          </div>
-          <div class="pending-item">
-            <div class="pending-icon pi-amber"><svg width="16" height="16" fill="none" stroke="var(--amber)" stroke-width="1.8" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg></div>
-            <div>
-              <div class="pending-title">At-risk: Aisha Johnson</div>
-              <div class="pending-sub">Below 60% — consider outreach</div>
-            </div>
-            <div class="pending-time">Now</div>
-          </div>
-          <div class="pending-item">
-            <div class="pending-icon pi-green"><svg width="16" height="16" fill="none" stroke="var(--green)" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg></div>
-            <div>
-              <div class="pending-title">Course eval forms open</div>
-              <div class="pending-sub">All 3 courses · Closes Apr 28</div>
-            </div>
-            <div class="pending-time">13 days</div>
-          </div>
-          <div class="pending-item">
-            <div class="pending-icon pi-amber"><svg width="16" height="16" fill="none" stroke="var(--amber)" stroke-width="1.8" viewBox="0 0 24 24"><path d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/></svg></div>
-            <div>
-              <div class="pending-title">3 unread messages</div>
-              <div class="pending-sub">Students in CS 4850</div>
-            </div>
-            <div class="pending-time">1h ago</div>
-          </div>
-        </div>
-
         <!-- Grade distribution -->
         <div class="card">
           <div class="card-header"><span class="card-title">Grade Distribution — CS 3410</span></div>
@@ -228,22 +131,6 @@
           </div>
         </div>
 
-        <!-- Upcoming -->
-        <div class="card">
-          <div class="card-header"><span class="card-title">This Week</span></div>
-          <div class="pending-item">
-            <div style="width:36px;text-align:center;flex-shrink:0"><div style="font-size:11px;color:var(--muted)">TUE</div><div style="font-size:18px;font-family:'Playfair Display',serif;">15</div></div>
-            <div><div class="pending-title">CS 3410 — Lecture</div><div class="pending-sub">9:30 AM · Gates 114</div></div>
-          </div>
-          <div class="pending-item">
-            <div style="width:36px;text-align:center;flex-shrink:0"><div style="font-size:11px;color:var(--muted)">WED</div><div style="font-size:18px;font-family:'Playfair Display',serif;">16</div></div>
-            <div><div class="pending-title">CS 6780 — Seminar</div><div class="pending-sub">2:00 PM · Gates 310</div></div>
-          </div>
-          <div class="pending-item">
-            <div style="width:36px;text-align:center;flex-shrink:0"><div style="font-size:11px;color:var(--muted)">THU</div><div style="font-size:18px;font-family:'Playfair Display',serif;">17</div></div>
-            <div><div class="pending-title">Office Hours</div><div class="pending-sub">3:00–5:00 PM · Gates 418</div></div>
-          </div>
-        </div>
       </div>
     </div>
   </main>

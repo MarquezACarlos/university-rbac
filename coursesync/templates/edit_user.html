@@ -1,0 +1,151 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Edit User — CourseSync</title>
+  <link rel="stylesheet" href="{% static 'css/sysadmin.css' %}">
+  <style>
+    .form-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); max-width: 660px; }
+    .form-body { padding: 24px 28px; display: flex; flex-direction: column; gap: 18px; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .field { display: flex; flex-direction: column; gap: 5px; }
+    .field label { font-family: var(--mono); font-size: 10px; text-transform: uppercase; letter-spacing: 1px; color: var(--muted); }
+    .field input, .field select {
+      padding: 9px 12px;
+      background: var(--surface2);
+      border: 1px solid var(--border2);
+      border-radius: 6px;
+      color: var(--text);
+      font-family: 'Inter', sans-serif;
+      font-size: 13px;
+      transition: border-color 0.15s;
+      width: 100%;
+    }
+    .field input:focus, .field select:focus { outline: none; border-color: var(--accent); }
+    .field select option { background: var(--surface2); }
+    .errorlist { list-style: none; color: var(--red); font-size: 11px; margin-top: 4px; font-family: var(--mono); }
+    .field-hint { font-size: 11px; color: var(--muted); margin-top: 4px; font-family: var(--mono); }
+    .form-actions { padding: 16px 28px; border-top: 1px solid var(--border); display: flex; gap: 10px; justify-content: flex-end; }
+    .btn { padding: 8px 18px; border-radius: 6px; font-size: 12.5px; font-weight: 500; cursor: pointer; border: none; font-family: 'Inter', sans-serif; text-decoration: none; display: inline-block; }
+    .btn-primary { background: var(--accent); color: white; }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
+    .logout-btn { width: 100%; padding: 7px 12px; margin-top: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface2); color: var(--muted); font-family: var(--mono); font-size: 11px; cursor: pointer; }
+    .logout-btn:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-mark">CourseSync</div>
+        <div class="brand-role">Sys Admin</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="{% url 'sysadmin_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Overview
+      </a>
+      <div class="nav-section">Access Control</div>
+      <a class="nav-item active" href="{% url 'users_list' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+        Users & Roles
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+        <div>
+          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="user-role">SYS_ADMIN</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">logout</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">// edit_user</div>
+        <div class="page-sub">Editing account for <strong>{{ edited_user.username }}</strong></div>
+      </div>
+      <a href="{% url 'users_list' %}" class="btn btn-ghost">← Back</a>
+    </div>
+
+    <div class="form-card">
+      <form method="post">
+        {% csrf_token %}
+        <div class="form-body">
+
+          <!-- Role -->
+          <div class="field">
+            <label for="{{ form.role.id_for_label }}">Role</label>
+            {{ form.role }}
+            {% if form.role.errors %}<ul class="errorlist">{% for e in form.role.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+
+          <!-- Name row -->
+          <div class="form-row">
+            <div class="field">
+              <label for="{{ form.first_name.id_for_label }}">First Name</label>
+              {{ form.first_name }}
+              {% if form.first_name.errors %}<ul class="errorlist">{% for e in form.first_name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="field">
+              <label for="{{ form.last_name.id_for_label }}">Last Name</label>
+              {{ form.last_name }}
+              {% if form.last_name.errors %}<ul class="errorlist">{% for e in form.last_name.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+          </div>
+
+          <!-- Username / ID row -->
+          <div class="form-row">
+            <div class="field">
+              <label for="{{ form.username.id_for_label }}">Username</label>
+              {{ form.username }}
+              {% if form.username.errors %}<ul class="errorlist">{% for e in form.username.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+            <div class="field">
+              <label for="{{ form.university_id.id_for_label }}">University ID</label>
+              {{ form.university_id }}
+              {% if form.university_id.errors %}<ul class="errorlist">{% for e in form.university_id.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            </div>
+          </div>
+
+          <!-- Email -->
+          <div class="field">
+            <label for="{{ form.email.id_for_label }}">Email</label>
+            {{ form.email }}
+            {% if form.email.errors %}<ul class="errorlist">{% for e in form.email.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+          </div>
+
+          <!-- New password -->
+          <div class="field">
+            <label for="{{ form.new_password.id_for_label }}">New Password</label>
+            {{ form.new_password }}
+            {% if form.new_password.errors %}<ul class="errorlist">{% for e in form.new_password.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            <div class="field-hint">Leave blank to keep the current password.</div>
+          </div>
+
+        </div>
+        <div class="form-actions">
+          <a href="{% url 'users_list' %}" class="btn btn-ghost">Cancel</a>
+          <button type="submit" class="btn btn-primary">Save Changes</button>
+        </div>
+      </form>
+    </div>
+  </main>
+</div>
+</body>
+</html>

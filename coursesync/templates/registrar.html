@@ -20,40 +20,21 @@
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Dashboard
       </a>
-      <a class="nav-item" href="#">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"/></svg>
-        Enrollment Queue
-        {% if pending_requests %}<span class="badge">{{ pending_requests|length }}</span>{% endif %}
-      </a>
-      <a class="nav-item" href="#">
+      <a class="nav-item" href="{% url 'registrar_dashboard' %}">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
         Course Catalog
+      </a>
+      <a class="nav-item" href="{% url 'create_course' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
+        New Course
+      </a>
+      <a class="nav-item" href="{% url 'registrar_students' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+        Student Enrollment
       </a>
       <a class="nav-item" href="{% url 'create_major' %}">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"/></svg>
         New Major
-      </a>
-      <a class="nav-item" href="#">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
-        Student Records
-      </a>
-      <div class="nav-section">Administration</div>
-      <a class="nav-item" href="#">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M18.364 18.364A9 9 0 005.636 5.636m12.728 12.728A9 9 0 015.636 5.636m12.728 12.728L5.636 5.636"/></svg>
-        Holds Management
-        <span class="badge badge-amber">7</span>
-      </a>
-      <a class="nav-item" href="#">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/></svg>
-        Academic Calendar
-      </a>
-      <a class="nav-item" href="#">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
-        Transcripts
-      </a>
-      <a class="nav-item" href="#">
-        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
-        Reports
       </a>
     </nav>
     <div class="sidebar-footer">
@@ -75,10 +56,9 @@
     <div class="page-header">
       <div>
         <div class="page-title">Registrar Dashboard</div>
-        <div class="page-sub">{{ student_count }} student{{ student_count|pluralize }} · {{ courses|length }} course{{ courses|length|pluralize }} · {{ pending_requests|length }} pending</div>
+        <div class="page-sub">{{ student_count }} student{{ student_count|pluralize }} · {{ courses|length }} course{{ courses|length|pluralize }} · {{ majors|length }} major{{ majors|length|pluralize }}</div>
       </div>
       <div class="header-actions">
-        <button class="btn btn-ghost">Generate Report</button>
         <a href="{% url 'create_course' %}" class="btn btn-primary">+ Add Course Section</a>
       </div>
     </div>
@@ -88,11 +68,6 @@
         <div class="stat-label">Total Students</div>
         <div class="stat-value c-accent">{{ student_count }}</div>
         <div class="stat-sub">Registered in system</div>
-      </div>
-      <div class="stat">
-        <div class="stat-label">Pending Requests</div>
-        <div class="stat-value {% if pending_requests %}c-amber{% endif %}">{{ pending_requests|length }}</div>
-        <div class="stat-sub">Awaiting action</div>
       </div>
       <div class="stat">
         <div class="stat-label">Course Sections</div>
@@ -106,56 +81,8 @@
       </div>
     </div>
 
-    <div class="tabs">
-      <div class="tab active">Enrollment Queue</div>
-      <div class="tab">Course Sections</div>
-      <div class="tab">Student Records</div>
-      <div class="tab">Grade Submissions</div>
-    </div>
-
     <div class="content-grid">
       <div>
-        <!-- Enrollment queue -->
-        <div class="card">
-          <div class="card-header">
-            <span class="card-title">Pending Enrollment Requests</span>
-            <span class="card-action">Bulk approve →</span>
-          </div>
-          {% if pending_requests %}
-          <table class="enroll-table">
-            <thead>
-              <tr>
-                <th>Student</th>
-                <th>Course</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              {% for enrollment in pending_requests %}
-              <tr>
-                <td>
-                  <div class="stu-name">{{ enrollment.student.get_full_name|default:enrollment.student.username }}</div>
-                  <div class="stu-meta">{{ enrollment.student.university_id }}</div>
-                </td>
-                <td>
-                  <div style="font-weight:500">{{ enrollment.course.code }}</div>
-                  <div class="stu-meta">{{ enrollment.course.title }} · {{ enrollment.course.credits }} cr</div>
-                </td>
-                <td><span class="status-pill pill-pending">Pending</span></td>
-                <td class="actions">
-                  <a href="{% url 'approve_enrollment' enrollment.id %}" class="btn btn-success btn-sm">Approve</a>
-                  <a href="{% url 'deny_enrollment' enrollment.id %}" class="btn btn-danger btn-sm">Deny</a>
-                </td>
-              </tr>
-              {% endfor %}
-            </tbody>
-          </table>
-          {% else %}
-          <div style="padding: 24px 18px; color: var(--muted); font-size: 13px; text-align: center;">No pending enrollment requests.</div>
-          {% endif %}
-        </div>
-
         <!-- Course catalog -->
         <div class="card">
           <div class="card-header">
@@ -198,62 +125,6 @@
         </div>
       </div>
 
-      <!-- Right column -->
-      <div>
-        <!-- Holds -->
-        <div class="card">
-          <div class="card-header"><span class="card-title">Active Enrollment Holds</span></div>
-          <div class="hold-item">
-            <div><div class="hold-name">Aisha Johnson</div><div class="hold-reason">Academic probation hold</div></div>
-            <span class="hold-type">Academic</span>
-          </div>
-          <div class="hold-item">
-            <div><div class="hold-name">Lena Fischer</div><div class="hold-reason">Unpaid balance — $1,240</div></div>
-            <span class="hold-type">Financial</span>
-          </div>
-          <div class="hold-item">
-            <div><div class="hold-name">Chris Patel</div><div class="hold-reason">Missing immunization records</div></div>
-            <span class="hold-type">Health</span>
-          </div>
-          <div class="hold-item">
-            <div><div class="hold-name">Anna Bergström</div><div class="hold-reason">International student I-20 update</div></div>
-            <span class="hold-type">Admin</span>
-          </div>
-          <div style="padding: 12px 14px; border-top: 1px solid var(--border);">
-            <button class="btn btn-ghost" style="width:100%;font-size:12px;">Manage all holds →</button>
-          </div>
-        </div>
-
-        <!-- Academic Calendar -->
-        <div class="card">
-          <div class="card-header"><span class="card-title">Upcoming Deadlines</span></div>
-          <div class="cal-item">
-            <div class="cal-date">Apr 18</div>
-            <div class="cal-dot" style="background:var(--red)"></div>
-            <div><div class="cal-event">Final withdrawal deadline</div><div class="cal-sub">W grade assigned after this date</div></div>
-          </div>
-          <div class="cal-item">
-            <div class="cal-date">Apr 20</div>
-            <div class="cal-dot" style="background:var(--amber)"></div>
-            <div><div class="cal-event">Grade submission deadline</div><div class="cal-sub">Faculty final grade entry</div></div>
-          </div>
-          <div class="cal-item">
-            <div class="cal-date">Apr 27</div>
-            <div class="cal-dot" style="background:var(--accent)"></div>
-            <div><div class="cal-event">Fall 2025 enrollment opens</div><div class="cal-sub">Priority: Seniors first</div></div>
-          </div>
-          <div class="cal-item">
-            <div class="cal-date">May 10</div>
-            <div class="cal-dot" style="background:var(--green)"></div>
-            <div><div class="cal-event">Commencement — Spring 2025</div><div class="cal-sub">312 candidates eligible</div></div>
-          </div>
-          <div class="cal-item">
-            <div class="cal-date">May 15</div>
-            <div class="cal-dot" style="background:var(--muted)"></div>
-            <div><div class="cal-event">Transcripts available</div><div class="cal-sub">Post-semester processing complete</div></div>
-          </div>
-        </div>
-      </div>
     </div>
   </main>
 </div>

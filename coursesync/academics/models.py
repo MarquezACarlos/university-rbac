@@ -61,6 +61,7 @@ class Enrollment(models.Model):
         PENDING = "pending", "Pending"
         APPROVED = "approved", "Approved"
         DENIED = "denied", "Denied"
+        DROP_PENDING = "drop_pending", "Drop Pending"
 
     student = models.ForeignKey(
         User,
@@ -84,6 +85,70 @@ class Enrollment(models.Model):
 
     def __str__(self):
         return f"{self.student} -> {self.course} ({self.status})"
+
+
+class RegistrarEnrollmentChange(models.Model):
+    class ChangeType(models.TextChoices):
+        ADD = "add", "Add"
+        REMOVE = "remove", "Remove"
+
+    class Status(models.TextChoices):
+        PENDING = "pending", "Pending Advisor Review"
+        APPROVED = "approved", "Approved"
+        DENIED = "denied", "Denied"
+
+    student = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="registrar_changes",
+        limit_choices_to={"role": "student"},
+    )
+    course = models.ForeignKey(Course, on_delete=models.CASCADE, related_name="registrar_changes")
+    change_type = models.CharField(max_length=10, choices=ChangeType.choices)
+    status = models.CharField(max_length=20, choices=Status.choices, default=Status.PENDING)
+    proposed_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, related_name="proposed_changes",
+        limit_choices_to={"role": "registrar"},
+    )
+    reviewed_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True, related_name="reviewed_changes",
+        limit_choices_to={"role": "advisor"},
+    )
+    proposed_at = models.DateTimeField(auto_now_add=True)
+    note = models.TextField(blank=True)
+
+    class Meta:
+        unique_together = ("student", "course", "change_type", "status")
+
+    def __str__(self):
+        return f"{self.change_type.upper()} {self.course.code} for {self.student} [{self.status}]"
+
+
+GRADE_CHOICES = [
+    ("A", "A"), ("A-", "A-"),
+    ("B+", "B+"), ("B", "B"), ("B-", "B-"),
+    ("C+", "C+"), ("C", "C"), ("C-", "C-"),
+    ("D+", "D+"), ("D", "D"),
+    ("F", "F"),
+]
+
+
+class TranscriptEntry(models.Model):
+    student = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name="transcript_entries",
+        limit_choices_to={"role": "student"},
+    )
+    course_code = models.CharField(max_length=20)
+    course_name = models.CharField(max_length=200)
+    credits = models.PositiveIntegerField(default=3)
+    grade = models.CharField(max_length=2, choices=GRADE_CHOICES)
+    added_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True,
+        related_name="added_transcript_entries",
+        limit_choices_to={"role": "registrar"},
+    )
+    added_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.course_code} — {self.student} ({self.grade})"
 
 
 class Assignment(models.Model):

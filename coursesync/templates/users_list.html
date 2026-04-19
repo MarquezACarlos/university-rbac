@@ -1,0 +1,187 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users &amp; Roles — CourseSync</title>
+  <link rel="stylesheet" href="{% static 'css/sysadmin.css' %}">
+  <style>
+    .filter-bar { display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 20px; }
+    .filter-tab {
+      padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 500;
+      font-family: var(--mono); text-decoration: none; border: 1px solid var(--border2);
+      background: var(--surface2); color: var(--muted); transition: all 0.15s;
+    }
+    .filter-tab:hover { color: var(--text); border-color: var(--accent); }
+    .filter-tab.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+    .filter-tab.ft-professor.active { background: var(--surface2); color: var(--accent); border-color: var(--accent); }
+    .filter-tab.ft-advisor.active { background: var(--green-dim); color: var(--green); border-color: var(--green); }
+    .filter-tab.ft-registrar.active { background: var(--amber-dim); color: var(--amber); border-color: var(--amber); }
+    .filter-tab.ft-sysadmin.active { background: var(--surface2); color: var(--purple, #a78bfa); border-color: var(--purple, #a78bfa); }
+
+    .users-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); }
+    .users-table { width: 100%; border-collapse: collapse; }
+    .users-table th {
+      text-align: left; padding: 10px 16px; font-family: var(--mono); font-size: 10px;
+      text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted);
+      border-bottom: 1px solid var(--border); background: var(--surface2);
+    }
+    .users-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+    .users-table tr:last-child td { border-bottom: none; }
+    .users-table tr:hover td { background: var(--surface2); }
+
+    .user-name-mono { font-family: var(--mono); font-size: 12px; font-weight: 500; color: var(--text); }
+    .user-meta { font-family: var(--mono); font-size: 11px; color: var(--muted); margin-top: 2px; }
+
+    .role-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.5px; }
+    .rb-student   { background: var(--accent-dim);  color: var(--accent); }
+    .rb-professor { background: var(--surface2);     color: var(--accent); border: 1px solid var(--border2); }
+    .rb-advisor   { background: var(--green-dim);    color: var(--green); }
+    .rb-registrar { background: var(--amber-dim);    color: var(--amber); }
+    .rb-admin     { background: var(--surface2);     color: var(--purple, #a78bfa); border: 1px solid var(--border2); }
+
+    .btn { padding: 6px 14px; border-radius: 6px; font-size: 11px; font-weight: 500; cursor: pointer; border: 1px solid var(--border2); font-family: var(--mono); text-decoration: none; display: inline-block; background: var(--surface2); color: var(--text); transition: all 0.15s; }
+    .btn:hover { border-color: var(--accent); color: var(--accent); }
+    .btn-primary { background: var(--accent); color: white; border-color: var(--accent); }
+    .btn-primary:hover { opacity: 0.9; color: white; }
+    .btn-danger { color: var(--red); border-color: var(--red); }
+    .btn-danger:hover { background: var(--red); color: white; }
+
+    .table-footer { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+    .count-label { font-family: var(--mono); font-size: 10px; color: var(--muted); }
+
+    .empty-state { padding: 40px 16px; text-align: center; color: var(--muted); font-family: var(--mono); font-size: 12px; }
+
+    .logout-btn { width: 100%; padding: 7px 12px; margin-top: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface2); color: var(--muted); font-family: var(--mono); font-size: 11px; cursor: pointer; }
+    .logout-btn:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-mark">CourseSync</div>
+        <div class="brand-role">Sys Admin</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="{% url 'sysadmin_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Overview
+      </a>
+      <div class="nav-section">Access Control</div>
+      <a class="nav-item active" href="{% url 'users_list' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+        Users & Roles
+      </a>
+      <a class="nav-item" href="{% url 'rbac_policies' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+        RBAC Policies
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+        <div>
+          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="user-role">SYS_ADMIN</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">logout</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">// users_and_roles</div>
+        <div class="page-sub">{{ total }} total accounts across all roles</div>
+      </div>
+      <a href="{% url 'create_user' %}" class="btn btn-primary">+ new user</a>
+    </div>
+
+    <!-- Role filter tabs -->
+    <div class="filter-bar">
+      <a href="{% url 'users_list' %}" class="filter-tab {% if active_role == 'all' %}active{% endif %}">
+        ALL <span style="opacity:.6">({{ total }})</span>
+      </a>
+      <a href="{% url 'users_list' %}?role=student" class="filter-tab {% if active_role == 'student' %}active{% endif %}">
+        STUDENT <span style="opacity:.6">({{ role_counts.student }})</span>
+      </a>
+      <a href="{% url 'users_list' %}?role=professor" class="filter-tab ft-professor {% if active_role == 'professor' %}active{% endif %}">
+        PROFESSOR <span style="opacity:.6">({{ role_counts.professor }})</span>
+      </a>
+      <a href="{% url 'users_list' %}?role=advisor" class="filter-tab ft-advisor {% if active_role == 'advisor' %}active{% endif %}">
+        ADVISOR <span style="opacity:.6">({{ role_counts.advisor }})</span>
+      </a>
+      <a href="{% url 'users_list' %}?role=registrar" class="filter-tab ft-registrar {% if active_role == 'registrar' %}active{% endif %}">
+        REGISTRAR <span style="opacity:.6">({{ role_counts.registrar }})</span>
+      </a>
+      <a href="{% url 'users_list' %}?role=sysadmin" class="filter-tab ft-sysadmin {% if active_role == 'sysadmin' %}active{% endif %}">
+        SYS_ADMIN <span style="opacity:.6">({{ role_counts.sysadmin }})</span>
+      </a>
+    </div>
+
+    <div class="users-card">
+      <table class="users-table">
+        <thead>
+          <tr>
+            <th>User</th>
+            <th>Role</th>
+            <th>Email</th>
+            <th>Major / Dept</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for user in users %}
+          <tr>
+            <td>
+              <div class="user-name-mono">{{ user.username }}</div>
+              <div class="user-meta">{{ user.get_full_name }}{% if user.university_id %} · {{ user.university_id }}{% endif %}</div>
+            </td>
+            <td>
+              {% if user.role == "student" %}<span class="role-badge rb-student">STUDENT</span>
+              {% elif user.role == "professor" %}<span class="role-badge rb-professor">PROFESSOR</span>
+              {% elif user.role == "advisor" %}<span class="role-badge rb-advisor">ADVISOR</span>
+              {% elif user.role == "registrar" %}<span class="role-badge rb-registrar">REGISTRAR</span>
+              {% elif user.role == "sysadmin" or user.is_superuser %}<span class="role-badge rb-admin">SYS_ADMIN</span>
+              {% else %}<span class="role-badge">{{ user.role|upper }}</span>{% endif %}
+            </td>
+            <td style="color:var(--muted);font-size:12px">{{ user.email|default:"—" }}</td>
+            <td style="color:var(--muted);font-size:12px">
+              {% if user.role == "student" %}{{ user.student_profile.major|default:"—" }}
+              {% elif user.role == "advisor" %}
+                {% if user.advised_major %}{{ user.advised_major.name }}{% else %}—{% endif %}
+              {% else %}—{% endif %}
+            </td>
+            <td style="white-space:nowrap;display:flex;gap:6px">
+              <a href="{% url 'edit_user' user.id %}" class="btn">edit</a>
+              {% if user != request.user %}
+              <a href="{% url 'delete_user' user.id %}" class="btn btn-danger">delete</a>
+              {% endif %}
+            </td>
+          </tr>
+          {% empty %}
+          <tr><td colspan="5" class="empty-state">No users found for this filter.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="table-footer">
+        <span class="count-label">{{ users|length }} user{{ users|length|pluralize }} shown</span>
+        <a href="{% url 'create_user' %}" class="btn">+ new user</a>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

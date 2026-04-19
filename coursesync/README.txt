@@ -28,6 +28,14 @@ User.objects.create_user(username="registrar1", password="test1234", role="regis
 User.objects.create_user(username="sysadmin1", password="test1234", role="sysadmin")
 exit()
 
+Role passwords:
+Admin: admin
+advisors: advisor123!
+professor: professor123!
+registrar: registrar123!
+
+
+
 Contents
 - templates/
   - base.html

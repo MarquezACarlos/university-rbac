@@ -1,0 +1,144 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>RBAC Policies — CourseSync</title>
+  <link rel="stylesheet" href="{% static 'css/sysadmin.css' %}">
+  <style>
+    .policy-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); overflow-x: auto; }
+
+    .policy-table { width: 100%; border-collapse: collapse; min-width: 680px; }
+    .policy-table th {
+      padding: 10px 16px; font-family: var(--mono); font-size: 10px; text-transform: uppercase;
+      letter-spacing: 0.8px; color: var(--muted); border-bottom: 1px solid var(--border);
+      background: var(--surface2); text-align: center;
+    }
+    .policy-table th.col-permission { text-align: left; min-width: 240px; }
+    .policy-table td { padding: 10px 16px; border-bottom: 1px solid var(--border); font-size: 12.5px; text-align: center; vertical-align: middle; }
+    .policy-table td.col-permission { text-align: left; color: var(--text); font-size: 12.5px; }
+    .policy-table tr:last-child td { border-bottom: none; }
+    .policy-table tr:hover td { background: var(--surface2); }
+
+    .cat-row td {
+      background: var(--surface2); color: var(--muted); font-family: var(--mono);
+      font-size: 10px; text-transform: uppercase; letter-spacing: 1px;
+      padding: 6px 16px; border-bottom: 1px solid var(--border);
+      text-align: left; font-weight: 600;
+    }
+
+    .check { color: var(--green); font-size: 15px; }
+    .dash  { color: var(--border2); font-size: 13px; }
+
+    .role-head { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+    .role-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.5px; }
+    .rb-student   { background: var(--accent-dim);  color: var(--accent); }
+    .rb-professor { background: var(--surface2);     color: var(--accent); border: 1px solid var(--border2); }
+    .rb-advisor   { background: var(--green-dim);    color: var(--green); }
+    .rb-registrar { background: var(--amber-dim);    color: var(--amber); }
+    .rb-sysadmin  { background: var(--surface2);     color: var(--purple, #a78bfa); border: 1px solid var(--border2); }
+
+    .legend { display: flex; gap: 20px; padding: 10px 16px; border-top: 1px solid var(--border); font-family: var(--mono); font-size: 11px; color: var(--muted); }
+    .legend span { display: flex; align-items: center; gap: 6px; }
+
+    .logout-btn { width: 100%; padding: 7px 12px; margin-top: 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface2); color: var(--muted); font-family: var(--mono); font-size: 11px; cursor: pointer; }
+    .logout-btn:hover { color: var(--text); }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-icon">
+        <svg fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+      </div>
+      <div class="brand-text">
+        <div class="brand-mark">CourseSync</div>
+        <div class="brand-role">Sys Admin</div>
+      </div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">System</div>
+      <a class="nav-item" href="{% url 'sysadmin_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Overview
+      </a>
+      <div class="nav-section">Access Control</div>
+      <a class="nav-item" href="{% url 'users_list' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+        Users & Roles
+      </a>
+      <a class="nav-item active" href="{% url 'rbac_policies' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4"/></svg>
+        RBAC Policies
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+        <div>
+          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="user-role">SYS_ADMIN</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">logout</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">// rbac_policies</div>
+        <div class="page-sub">Role-Based Access Control · permission matrix for all roles</div>
+      </div>
+    </div>
+
+    <div class="policy-card">
+      <table class="policy-table">
+        <thead>
+          <tr>
+            <th class="col-permission">Permission</th>
+            {% for role in roles %}
+            <th>
+              <div class="role-head">
+                <span class="role-badge rb-{{ role }}">{{ role|upper }}</span>
+              </div>
+            </th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for category, perms in categories %}
+          <tr class="cat-row">
+            <td colspan="{{ roles|length|add:1 }}">{{ category }}</td>
+          </tr>
+          {% for cat, label, allowed_roles in perms %}
+          <tr>
+            <td class="col-permission">{{ label }}</td>
+            {% for role in roles %}
+            <td>
+              {% if role in allowed_roles %}
+                <span class="check">✓</span>
+              {% else %}
+                <span class="dash">—</span>
+              {% endif %}
+            </td>
+            {% endfor %}
+          </tr>
+          {% endfor %}
+          {% endfor %}
+        </tbody>
+      </table>
+      <div class="legend">
+        <span><span class="check">✓</span> Permission granted</span>
+        <span><span class="dash">—</span> Not permitted</span>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

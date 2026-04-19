@@ -1,0 +1,145 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ course.code }} — CourseSync</title>
+  <link rel="stylesheet" href="{% static 'css/student.css' %}">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">CourseSync</div>
+      <div class="brand-role">Student Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Overview</div>
+      <a class="nav-item" href="{% url 'student_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item active" href="{% url 'my_courses' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h8M4 18h8"/></svg>
+        My Courses
+      </a>
+      <div class="nav-section">Academic</div>
+      <a class="nav-item" href="{% url 'enrollment_history' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Enrollment
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+        <div>
+          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="user-id">{{ request.user.university_id|default:request.user.username }}</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">Logout</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <a href="{% url 'my_courses' %}" style="font-size:13px;color:var(--muted);text-decoration:none;display:inline-block;margin-bottom:10px">← Back to My Courses</a>
+      <div class="page-title">{{ course.code }} — {{ course.title }}</div>
+      <div class="page-sub">{{ course.credits }} credit{{ course.credits|pluralize }}{% if course.professor %} · {{ course.professor.get_full_name }}{% endif %}{% if course.capacity %} · Capacity {{ course.capacity }}{% endif %}</div>
+    </div>
+
+    <div style="display:grid;grid-template-columns:1fr 280px;gap:20px;align-items:start">
+      <div>
+        <!-- Course info -->
+        <div class="card" style="margin-bottom:20px">
+          <div class="card-header"><span class="card-title">Course Information</span></div>
+          <div style="padding:20px;display:flex;flex-direction:column;gap:16px">
+            {% if course.description %}
+            <div>
+              <div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:4px">Description</div>
+              <div style="font-size:13.5px;line-height:1.6">{{ course.description }}</div>
+            </div>
+            {% endif %}
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+              <div>
+                <div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:4px">Professor</div>
+                <div style="font-size:13.5px;font-weight:500">{{ course.professor.get_full_name|default:"TBA" }}</div>
+                {% if course.professor.email %}<div style="font-size:12px;color:var(--muted)">{{ course.professor.email }}</div>{% endif %}
+              </div>
+              <div>
+                <div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:4px">Enrolled Since</div>
+                <div style="font-size:13.5px;font-weight:500">{{ enrollment.proposed_at|date:"M j, Y" }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Grade -->
+        <div class="card">
+          <div class="card-header"><span class="card-title">Your Grade</span></div>
+          {% if grade and grade.final_grade %}
+          <div style="padding:28px 20px;display:flex;align-items:center;gap:28px">
+            {% with g=grade.final_grade %}
+            <div style="width:80px;height:80px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:'DM Serif Display',serif;font-size:32px;
+              {% if g == 'A' or g == 'A-' %}background:var(--accent-light);color:var(--accent);
+              {% elif g == 'B+' or g == 'B' or g == 'B-' %}background:var(--info-light);color:var(--info);
+              {% elif g == 'C+' or g == 'C' or g == 'C-' %}background:var(--warn-light);color:var(--warn);
+              {% else %}background:#FEF0F0;color:#D63B3B;{% endif %}
+              flex-shrink:0">{{ g }}</div>
+            {% endwith %}
+            <div>
+              <div style="font-family:'DM Serif Display',serif;font-size:22px;margin-bottom:4px">
+                {% with g=grade.final_grade %}
+                {% if g == 'A' %}Excellent{% elif g == 'A-' %}Excellent{% elif g == 'B+' or g == 'B' %}Good{% elif g == 'B-' %}Good{% elif g == 'C+' or g == 'C' %}Satisfactory{% elif g == 'C-' %}Satisfactory{% elif g == 'D+' or g == 'D' %}Passing{% else %}Not Passing{% endif %}
+                {% endwith %}
+              </div>
+              {% if grade.numeric_grade %}
+              <div style="font-size:13px;color:var(--muted)">{{ grade.numeric_grade }} GPA points · {{ course.credits }} credit{{ course.credits|pluralize }}</div>
+              {% endif %}
+            </div>
+          </div>
+          {% else %}
+          <div style="padding:32px 20px;text-align:center;color:var(--muted);font-size:13px">
+            No grade has been posted for this course yet.
+          </div>
+          {% endif %}
+        </div>
+      </div>
+
+      <!-- Right panel -->
+      <div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Enrollment</span></div>
+          <div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px">
+            <div>
+              <div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:3px">Status</div>
+              <span class="status-pill pill-approved">Enrolled</span>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:3px">Credits</div>
+              <div style="font-size:15px;font-weight:500">{{ course.credits }}</div>
+            </div>
+            <div>
+              <div style="font-size:11px;font-weight:500;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:3px">Grade</div>
+              <div style="font-size:15px;font-weight:500">
+                {% if grade and grade.final_grade %}{{ grade.final_grade }}{% else %}<span style="color:var(--muted)">Pending</span>{% endif %}
+              </div>
+            </div>
+          </div>
+          <div style="padding:12px 16px;border-top:1px solid var(--border)">
+            <form method="post" action="{% url 'student_drop_enrollment' enrollment.id %}" onsubmit="return confirm('Drop {{ course.code }}?')">
+              {% csrf_token %}
+              <button type="submit" style="width:100%;padding:8px;border-radius:7px;font-size:13px;font-weight:500;background:transparent;color:#D63B3B;border:1px solid #D63B3B;cursor:pointer;font-family:'DM Sans',sans-serif">Drop Course</button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

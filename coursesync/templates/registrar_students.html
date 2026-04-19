@@ -1,0 +1,102 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Student Enrollment — CourseSync</title>
+  <link rel="stylesheet" href="{% static 'css/registrar.css' %}">
+  <style>
+    .stu-table { width: 100%; border-collapse: collapse; }
+    .stu-table th { text-align: left; padding: 9px 16px; font-size: 10.5px; font-weight: 600; text-transform: uppercase; letter-spacing: 0.8px; color: var(--muted); border-bottom: 1px solid var(--border); background: var(--surface2); }
+    .stu-table td { padding: 11px 16px; border-bottom: 1px solid var(--border); font-size: 13px; vertical-align: middle; }
+    .stu-table tr:last-child td { border-bottom: none; }
+    .stu-table tr:hover td { background: var(--surface2); }
+    .stu-name { font-weight: 500; font-size: 13.5px; }
+    .stu-meta { font-size: 11px; color: var(--muted); margin-top: 2px; }
+    .btn-sm { padding: 5px 12px; border-radius: 6px; font-size: 12px; font-weight: 500; text-decoration: none; display: inline-block; }
+    .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">CourseSync</div>
+      <div class="brand-role">Registrar Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Operations</div>
+      <a class="nav-item" href="{% url 'registrar_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="{% url 'registrar_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Course Catalog
+      </a>
+      <a class="nav-item active" href="{% url 'registrar_students' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+        Student Enrollment
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+        <div>
+          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="user-title">{{ request.user.role|title }}</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">Logout</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">Student Enrollment</div>
+      <div class="page-sub">{{ students|length }} student{{ students|length|pluralize }} — select a student to manage their enrollment</div>
+    </div>
+
+    <div class="card">
+      {% if students %}
+      <table class="stu-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>Major</th>
+            <th>Advisor</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for student in students %}
+          <tr>
+            <td>
+              <div class="stu-name">{{ student.get_full_name|default:student.username }}</div>
+              <div class="stu-meta">{{ student.university_id|default:"—" }} · {{ student.email|default:"—" }}</div>
+            </td>
+            <td style="color:var(--muted);font-size:12px">
+              {% if student.student_profile %}{{ student.student_profile.major }}{% else %}—{% endif %}
+            </td>
+            <td style="color:var(--muted);font-size:12px">
+              {% if student.student_profile.advisor %}{{ student.student_profile.advisor.get_full_name }}{% else %}—{% endif %}
+            </td>
+            <td>
+              <a href="{% url 'registrar_student_enrollment' student.id %}" class="btn-sm btn-ghost">Manage →</a>
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
+      <div style="padding:24px;color:var(--muted);font-size:13px;text-align:center">No students found.</div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+</body>
+</html>
