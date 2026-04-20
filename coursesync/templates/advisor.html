@@ -51,6 +51,14 @@
   </aside>
 
   <main class="main">
+    {% if is_impersonating %}
+    <div class="admin-view-banner">
+      <div class="banner-content">
+        <span class="banner-text">// ADMIN_MODE: Viewing as <strong>{{ viewed_user.get_full_name|default:viewed_user.username }}</strong></span>
+        <a href="{% url 'stop_viewing_as' %}" class="banner-btn">Exit View & Return to Admin</a>
+      </div>
+    </div>
+    {% endif %}
     {% if messages %}
     <div style="margin-bottom:16px">
       {% for message in messages %}
@@ -296,7 +304,7 @@
           <div style="padding:16px 20px;display:flex;flex-direction:column;gap:12px">
             <div>
               <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:3px">Name</div>
-              <div style="font-size:13.5px;font-weight:500">{{ request.user.get_full_name|default:request.user.username }}</div>
+              <div style="font-size:13.5px;font-weight:500">{{ viewed_user.get_full_name|default:viewed_user.username }}</div>
             </div>
             <div>
               <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:3px">Field of Study</div>
@@ -304,7 +312,7 @@
             </div>
             <div>
               <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:3px">Email</div>
-              <div style="font-size:13.5px">{{ request.user.email|default:"—" }}</div>
+              <div style="font-size:13.5px">{{ viewed_user.email|default:"—" }}</div>
             </div>
           </div>
         </div>

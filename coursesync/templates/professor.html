@@ -72,6 +72,14 @@
         <div class="page-title">Faculty Dashboard</div>
         <div class="page-sub">{{ courses|length }} active course{{ courses|length|pluralize }} · {{ total_students }} enrolled student{{ total_students|pluralize }}</div>
       </div>
+      {% if is_impersonating %}
+      <div class="admin-view-banner">
+        <div class="banner-content">
+          <span class="banner-text">// ADMIN_MODE: Viewing as Professor <strong>{{ viewed_user.get_full_name|default:viewed_user.username }}</strong></span>
+          <a href="{% url 'stop_viewing_as' %}" class="banner-btn">Exit View & Return to Admin</a>
+        </div>
+      </div>
+      {% endif %}
       <div class="header-actions">
         <button class="btn btn-ghost">Export Grades</button>
         <button class="btn btn-primary">Submit Final Grades</button>

@@ -46,10 +46,10 @@
     </nav>
     <div class="sidebar-footer">
       <div class="user-card">
-        <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+        <div class="avatar">{{ viewed_user.first_name|default:viewed_user.username|slice:":1"|upper }}{{ viewed_user.last_name|slice:":1"|upper }}</div>
         <div>
-          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
-          <div class="user-id">{{ request.user.university_id|default:request.user.username }}</div>
+          <div class="user-name">{{ viewed_user.get_full_name|default:viewed_user.username }}</div>
+          <div class="user-id">{{ viewed_user.university_id|default:viewed_user.username }}</div>
         </div>
       </div>
       <form method="post" action="{% url 'logout' %}">
@@ -62,9 +62,21 @@
   <!-- Main -->
   <main class="main">
     <div class="page-header">
-      <div class="page-title">Welcome, {{ request.user.first_name|default:request.user.username }}</div>
-      <div class="page-sub">{{ request.user.university_id|default:"" }}{% if profile %} · {{ profile.major }}{% endif %}</div>
+      <div class="page-title">Welcome, {{ viewed_user.first_name|default:viewed_user.username }}</div>
+      <div class="page-sub">{{ viewed_user.university_id|default:"" }}{% if profile %} · {{ profile.major }}{% endif %}</div>
     </div>
+
+  {% if is_impersonating %}
+  <div class="admin-view-banner">
+    <div class="banner-content">
+      <div class="banner-text-group">
+        <span class="banner-label">ADMIN_MODE</span>
+        <span class="banner-text">Viewing Student: <strong>{{ viewed_user.get_full_name|default:viewed_user.username }}</strong></span>
+      </div>
+      <a href="{% url 'stop_viewing_as' %}" class="banner-btn">Exit & Return</a>
+    </div>
+  </div>
+  {% endif %}
 
     <div class="stats">
       <div class="stat accent">

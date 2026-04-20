@@ -80,7 +80,20 @@
         <div class="page-title">// edit_user</div>
         <div class="page-sub">Editing account for <strong>{{ edited_user.username }}</strong></div>
       </div>
-      <a href="{% url 'users_list' %}" class="btn btn-ghost">← Back</a>
+      <div style="display: flex; gap: 10px;">
+        <!-- Role-based Dashboard Link -->
+        {% if edited_user.role == "student" %}
+          <a href="{% url 'view_as_user' edited_user.id %}" class="btn btn-ghost" style="border-color: var(--accent); color: var(--accent);">View Student Dash</a>
+        {% elif edited_user.role == "professor" %}
+          <a href="{% url 'view_as_user' edited_user.id %}" class="btn btn-ghost" style="border-color: var(--accent); color: var(--accent);">View Professor Dash</a>
+        {% elif edited_user.role == "advisor" %}
+          <a href="{% url 'view_as_user' edited_user.id %}" class="btn btn-ghost" style="border-color: var(--accent); color: var(--accent);">View Advisor Dash</a>
+        {% elif edited_user.role == "registrar" %}
+          <a href="{% url 'view_as_user' edited_user.id %}" class="btn btn-ghost" style="border-color: var(--accent); color: var(--accent);">View Registrar Dash</a>
+        {% endif %}
+        
+        <a href="{% url 'users_list' %}" class="btn btn-ghost">← Back</a>
+      </div>
     </div>
 
     <div class="form-card">
