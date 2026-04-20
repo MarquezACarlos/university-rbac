@@ -20,7 +20,7 @@
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Dashboard
       </a>
-      <a class="nav-item" href="#">
+      <a class="nav-item" href="{% url 'advisor_students' %}">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
         My Students
         {% if advisees %}<span class="notif">{{ advisees|length }}</span>{% endif %}
@@ -30,7 +30,7 @@
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
         Degree Audits
       </a>
-      <a class="nav-item" href="#">
+      <a class="nav-item" href="{% url 'advisor_catalog' %}">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
         Course Catalog
       </a>
@@ -96,14 +96,9 @@
         <div class="stat-value" style="font-size:16px;letter-spacing:0">{% if assigned_major %}{{ assigned_major.name }}{% else %}—{% endif %}</div>
         <div class="stat-sub">your field of study</div>
       </div>
-      <div class="stat">
+      <div class="stat {% if at_risk_count %}flag{% endif %}">
         <div class="stat-label">At-Risk Students</div>
-        <div class="stat-value">
-          {% with count=0 %}
-            {% for a in advisees %}{% if a.gpa < 2.0 %}{% with count=count|add:1 %}{% endwith %}{% endif %}{% endfor %}
-          {% endwith %}
-          {{ advisees|length|add:"0" }}
-        </div>
+        <div class="stat-value">{{ at_risk_count }}</div>
         <div class="stat-sub">GPA below 2.0</div>
       </div>
     </div>

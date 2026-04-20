@@ -8,7 +8,17 @@ from accounts.decorators import role_required
 from .forms import CourseForm, CreateUserForm, EditUserForm, MajorForm
 from decimal import Decimal
 
-from .models import Assignment, Course, Enrollment, Grade, Major, RegistrarEnrollmentChange, StudentProfile, Submission, TAProfile, TranscriptEntry
+from .models import Assignment, AuditLog, Course, Enrollment, Grade, Major, RegistrarEnrollmentChange, StudentProfile, Submission, TAProfile, TranscriptEntry
+
+
+def _log(actor_label, action, target, event_type, color="green"):
+    AuditLog.objects.create(
+        actor_label=actor_label,
+        action=action,
+        target=target,
+        event_type=event_type,
+        color=color,
+    )
 
 GRADE_POINTS = {
     "A": 4.0, "A-": 3.7,
@@ -401,6 +411,24 @@ def professor_assign_ta(request, course_id):
 
 @login_required
 @role_required("advisor")
+def advisor_catalog(request):
+    courses = Course.objects.select_related("professor").order_by("code")
+    return render(request, "advisor_catalog.html", {"courses": courses})
+
+
+@login_required
+@role_required("advisor")
+def advisor_students(request):
+    advisees = (
+        StudentProfile.objects.filter(advisor=request.user)
+        .select_related("user")
+        .order_by("user__last_name", "user__first_name")
+    )
+    return render(request, "advisor_students.html", {"advisees": advisees})
+
+
+@login_required
+@role_required("advisor")
 def advisor_dashboard(request):
     advisees = (
         StudentProfile.objects.filter(advisor=request.user)
@@ -439,12 +467,15 @@ def advisor_dashboard(request):
         .order_by("proposed_at")
     )
 
+    at_risk_count = sum(1 for a in advisees if a.gpa < 2.0)
+
     return render(request, "advisor.html", {
         "advisees": advisees,
         "pending_requests": pending,
         "assigned_major": assigned_major,
         "pending_changes": pending_changes,
         "pending_drops": pending_drops,
+        "at_risk_count": at_risk_count,
     })
 
 
@@ -474,10 +505,138 @@ def sysadmin_dashboard(request):
         role: users.filter(role=role).count()
         for role in ["student", "ta", "professor", "advisor", "registrar", "sysadmin"]
     }
+    total_users = users.count()
+    role_percents = {
+        role: round(count / total_users * 100) if total_users else 0
+        for role, count in role_counts.items()
+    }
+    audit_log = AuditLog.objects.all()[:20]
     return render(request, "sysadmin.html", {
         "users": users,
         "majors": majors,
         "role_counts": role_counts,
+        "role_percents": role_percents,
+        "audit_log": audit_log,
+    })
+
+
+@login_required
+@role_required("sysadmin")
+def audit_log_view(request):
+    filter_type = request.GET.get("filter", "all")
+    qs = AuditLog.objects.all()
+    if filter_type != "all":
+        qs = qs.filter(event_type__istartswith=filter_type)
+    logs = qs[:200]
+    return render(request, "audit_log.html", {
+        "audit_log": logs,
+        "active_filter": filter_type,
+    })
+
+
+@login_required
+@role_required("sysadmin")
+def database_browser(request):
+    from accounts.models import User
+
+    LIMIT = 100
+    TABLE_NAMES = [
+        "User", "Course", "Major", "StudentProfile",
+        "Enrollment", "Grade", "TranscriptEntry",
+        "RegistrarEnrollmentChange", "TAProfile", "AuditLog",
+    ]
+
+    counts = {
+        "User": User.objects.count(),
+        "Course": Course.objects.count(),
+        "Major": Major.objects.count(),
+        "StudentProfile": StudentProfile.objects.count(),
+        "Enrollment": Enrollment.objects.count(),
+        "Grade": Grade.objects.count(),
+        "TranscriptEntry": TranscriptEntry.objects.count(),
+        "RegistrarEnrollmentChange": RegistrarEnrollmentChange.objects.count(),
+        "TAProfile": TAProfile.objects.count(),
+        "AuditLog": AuditLog.objects.count(),
+    }
+
+    active = request.GET.get("table", "User")
+    if active not in TABLE_NAMES:
+        active = "User"
+
+    headers, rows = [], []
+
+    if active == "User":
+        headers = ["ID", "Username", "Full Name", "Role", "University ID", "Active"]
+        rows = [
+            (u.id, u.username, u.get_full_name() or "—", u.role, u.university_id or "—", "Yes" if u.is_active else "No")
+            for u in User.objects.order_by("id")[:LIMIT]
+        ]
+    elif active == "Course":
+        headers = ["ID", "Code", "Title", "Credits", "Capacity", "Professor"]
+        rows = [
+            (c.id, c.code, c.title, c.credits, c.capacity, c.professor.username if c.professor else "—")
+            for c in Course.objects.select_related("professor").order_by("id")[:LIMIT]
+        ]
+    elif active == "Major":
+        headers = ["ID", "Name", "Advisor"]
+        rows = [
+            (m.id, m.name, m.advisor.username if m.advisor else "—")
+            for m in Major.objects.select_related("advisor").order_by("id")[:LIMIT]
+        ]
+    elif active == "StudentProfile":
+        headers = ["ID", "Student", "Major", "GPA", "Advisor"]
+        rows = [
+            (p.id, p.user.username, p.major, p.gpa, p.advisor.username if p.advisor else "—")
+            for p in StudentProfile.objects.select_related("user", "advisor").order_by("id")[:LIMIT]
+        ]
+    elif active == "Enrollment":
+        headers = ["ID", "Student", "Course", "Status", "Reviewed By"]
+        rows = [
+            (e.id, e.student.username, e.course.code, e.status, e.reviewed_by.username if e.reviewed_by else "—")
+            for e in Enrollment.objects.select_related("student", "course", "reviewed_by").order_by("id")[:LIMIT]
+        ]
+    elif active == "Grade":
+        headers = ["ID", "Student", "Course", "Final Grade", "Proposed Grade", "Published"]
+        rows = [
+            (g.id, g.enrollment.student.username, g.enrollment.course.code,
+             g.final_grade or "—", g.proposed_grade or "—", "Yes" if g.published else "No")
+            for g in Grade.objects.select_related("enrollment__student", "enrollment__course").order_by("id")[:LIMIT]
+        ]
+    elif active == "TranscriptEntry":
+        headers = ["ID", "Student", "Course Code", "Course Name", "Credits", "Grade", "Added By"]
+        rows = [
+            (t.id, t.student.username, t.course_code, t.course_name, t.credits, t.grade, t.added_by.username if t.added_by else "—")
+            for t in TranscriptEntry.objects.select_related("student", "added_by").order_by("id")[:LIMIT]
+        ]
+    elif active == "RegistrarEnrollmentChange":
+        headers = ["ID", "Student", "Course", "Type", "Status", "Proposed By", "Reviewed By"]
+        rows = [
+            (r.id, r.student.username, r.course.code, r.change_type, r.status,
+             r.proposed_by.username if r.proposed_by else "—",
+             r.reviewed_by.username if r.reviewed_by else "—")
+            for r in RegistrarEnrollmentChange.objects.select_related("student", "course", "proposed_by", "reviewed_by").order_by("id")[:LIMIT]
+        ]
+    elif active == "TAProfile":
+        headers = ["ID", "TA", "Course"]
+        rows = [
+            (t.id, t.user.username, t.course.code if t.course else "—")
+            for t in TAProfile.objects.select_related("user", "course").order_by("id")[:LIMIT]
+        ]
+    elif active == "AuditLog":
+        headers = ["ID", "Timestamp", "Actor", "Action", "Target", "Event Type", "Color"]
+        rows = [
+            (a.id, a.timestamp.strftime("%Y-%m-%d %H:%M:%S"), a.actor_label, a.action, a.target, a.event_type, a.color)
+            for a in AuditLog.objects.order_by("-timestamp")[:LIMIT]
+        ]
+
+    return render(request, "database_browser.html", {
+        "table_names": TABLE_NAMES,
+        "active": active,
+        "counts": counts,
+        "headers": headers,
+        "rows": rows,
+        "limit": LIMIT,
+        "total": counts[active],
     })
 
 
@@ -511,6 +670,7 @@ def rbac_policies(request):
         ("Users",      "View all users",                   {"sysadmin"}),
         ("System",     "Access admin dashboard",           {"sysadmin"}),
         ("System",     "Manage RBAC policies (view)",      {"sysadmin"}),
+        ("System",     "View audit logs",                  {"sysadmin"}),
     ]
 
     from itertools import groupby
@@ -551,13 +711,38 @@ def create_user(request):
     majors = Major.objects.select_related("advisor").all()
     form = CreateUserForm(request.POST or None)
     if request.method == "POST" and form.is_valid():
-        form.save()
+        new_user = form.save()
+        _log(
+            actor_label=request.user.username,
+            action="created user",
+            target=f"{new_user.username} [{new_user.role.upper()}]",
+            event_type="USER_CREATE · RBAC3 role assigned",
+            color="green",
+        )
         return redirect("sysadmin_dashboard")
     return render(request, "create_user.html", {"form": form, "majors": majors})
 
 
 # keep old URL name working
 create_student = create_user
+
+
+@login_required
+@role_required("student", "ta")
+def my_advisor(request):
+    profile = getattr(request.user, "student_profile", None)
+    advisor = profile.advisor if profile else None
+    major = None
+    if advisor:
+        try:
+            major = advisor.advised_major
+        except Exception:
+            pass
+    return render(request, "my_advisor.html", {
+        "advisor": advisor,
+        "major": major,
+        "profile": profile,
+    })
 
 
 @login_required
@@ -751,6 +936,13 @@ def drop_enrollment(request, enrollment_id):
     if not StudentProfile.objects.filter(user=enrollment.student, advisor=request.user).exists():
         raise PermissionDenied
     if request.method == "POST":
+        _log(
+            actor_label=request.user.username,
+            action="dropped enrollment for",
+            target=f"{enrollment.student.username} → {enrollment.course.code}",
+            event_type="ENROLL_DROP",
+            color="amber",
+        )
         enrollment.delete()
     return redirect("student_detail", student_id=enrollment.student.id)
 
@@ -800,6 +992,13 @@ def approve_enrollment(request, enrollment_id):
     enrollment.status = "approved"
     enrollment.reviewed_by = request.user
     enrollment.save()
+    _log(
+        actor_label=request.user.username,
+        action="approved enrollment for",
+        target=f"{enrollment.student.username} → {enrollment.course.code}",
+        event_type="ENROLL_APPROVE · rbac_check: PASS",
+        color="green",
+    )
     return redirect("dashboard_router")
 
 
@@ -810,6 +1009,13 @@ def deny_enrollment(request, enrollment_id):
     enrollment.status = "denied"
     enrollment.reviewed_by = request.user
     enrollment.save()
+    _log(
+        actor_label=request.user.username,
+        action="denied enrollment for",
+        target=f"{enrollment.student.username} → {enrollment.course.code}",
+        event_type="ENROLL_DENY · rbac_check: PASS",
+        color="red",
+    )
     return redirect("dashboard_router")
 
 
@@ -1024,6 +1230,13 @@ def edit_user(request, user_id):
     form = EditUserForm(request.POST or None, instance=user)
     if request.method == "POST" and form.is_valid():
         form.save()
+        _log(
+            actor_label=request.user.username,
+            action="edited user",
+            target=f"{user.username} [{user.role.upper()}]",
+            event_type="USER_EDIT",
+            color="amber",
+        )
         return redirect("users_list")
     return render(request, "edit_user.html", {
         "form": form,
@@ -1041,6 +1254,13 @@ def delete_user(request, user_id):
         if user == request.user:
             messages.error(request, "You cannot delete your own account.")
             return redirect("users_list")
+        _log(
+            actor_label=request.user.username,
+            action="deleted user",
+            target=f"{user.username} [{user.role.upper()}]",
+            event_type="USER_DELETE",
+            color="red",
+        )
         user.delete()
         return redirect("users_list")
     return render(request, "user_confirm_delete.html", {"deleted_user": user})

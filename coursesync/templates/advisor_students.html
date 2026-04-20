@@ -1,0 +1,110 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ request.session.theme|default:'light' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Students — CourseSync</title>
+  <link rel="stylesheet" href="{% static 'css/advisor.css' %}">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">CourseSync</div>
+      <div class="brand-role">Advisor Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Overview</div>
+      <a class="nav-item" href="{% url 'advisor_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item active" href="{% url 'advisor_students' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0"/></svg>
+        My Students
+        {% if advisees %}<span class="notif">{{ advisees|length }}</span>{% endif %}
+      </a>
+      <div class="nav-section">Academic</div>
+      <a class="nav-item" href="#">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/></svg>
+        Degree Audits
+      </a>
+      <a class="nav-item" href="{% url 'advisor_catalog' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Course Catalog
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+        <div>
+          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="user-title">{{ request.user.role|title }}</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'set_theme' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        {% if request.session.theme == "dark" %}
+          <input type="hidden" name="theme" value="light">
+          <button type="submit" class="theme-btn">☀ Light Mode</button>
+        {% else %}
+          <input type="hidden" name="theme" value="dark">
+          <button type="submit" class="theme-btn">🌙 Dark Mode</button>
+        {% endif %}
+      </form>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">Logout</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">My Students</div>
+      <div class="page-sub">{{ advisees|length }} student{{ advisees|length|pluralize }} assigned to you</div>
+    </div>
+
+    <div class="card">
+      <div class="card-header">
+        <span class="card-title">Advisees</span>
+        <span class="card-action">{{ advisees|length }} total</span>
+      </div>
+      {% if advisees %}
+      <div class="stu-col-header">
+        <span class="col-lbl">Student</span>
+        <span class="col-lbl">Major</span>
+        <span class="col-lbl">GPA</span>
+        <span class="col-lbl">Standing</span>
+      </div>
+      {% for advisee in advisees %}
+      <a class="student-row" href="{% url 'student_detail' advisee.user.id %}" style="text-decoration:none;display:grid;grid-template-columns:inherit;color:inherit">
+        <div>
+          <div class="stu-name">{{ advisee.user.get_full_name|default:advisee.user.username }}</div>
+          <div class="stu-major">{{ advisee.user.university_id|default:"—" }}</div>
+        </div>
+        <div style="font-size:13px">{{ advisee.major|default:"—" }}</div>
+        <div class="gpa-val {% if advisee.gpa >= 3.5 %}gpa-good{% elif advisee.gpa >= 2.0 %}gpa-mid{% else %}gpa-low{% endif %}">
+          {{ advisee.gpa }}
+        </div>
+        <div>
+          {% if advisee.gpa >= 3.5 %}
+            <span class="flag-pill pill-green">Dean's List</span>
+          {% elif advisee.gpa >= 2.0 %}
+            <span class="flag-pill pill-green">Good standing</span>
+          {% else %}
+            <span class="flag-pill pill-red">⚑ At-risk</span>
+          {% endif %}
+        </div>
+      </a>
+      {% endfor %}
+      {% else %}
+      <div style="padding:32px;color:var(--muted);font-size:13px;text-align:center">No students are currently assigned to you.</div>
+      {% endif %}
+    </div>
+  </main>
+</div>
+</body>
+</html>

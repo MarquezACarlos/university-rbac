@@ -1,0 +1,139 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en" data-theme="{{ request.session.theme|default:'light' }}">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>My Advisor — CourseSync</title>
+  <link rel="stylesheet" href="{% static 'css/student.css' %}">
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">CourseSync</div>
+      <div class="brand-role">Student Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Overview</div>
+      <a class="nav-item" href="{% url 'student_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="{% url 'my_courses' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h8M4 18h8"/></svg>
+        My Courses
+      </a>
+      <div class="nav-section">Academic</div>
+      <a class="nav-item" href="{% url 'student_grades' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Grades & GPA
+      </a>
+      <a class="nav-item" href="{% url 'enrollment_history' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Enrollment
+      </a>
+      <div class="nav-section">Support</div>
+      <a class="nav-item active" href="{% url 'my_advisor' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/></svg>
+        My Advisor
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+        <div>
+          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="user-id">{{ request.user.university_id|default:request.user.username }}</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'set_theme' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        {% if request.session.theme == "dark" %}
+          <input type="hidden" name="theme" value="light">
+          <button type="submit" class="theme-btn">☀ Light Mode</button>
+        {% else %}
+          <input type="hidden" name="theme" value="dark">
+          <button type="submit" class="theme-btn">🌙 Dark Mode</button>
+        {% endif %}
+      </form>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">Logout</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div class="page-title">My Advisor</div>
+      <div class="page-sub">{{ request.user.get_full_name|default:request.user.username }}{% if profile %} · {{ profile.major }}{% endif %}</div>
+    </div>
+
+    {% if advisor %}
+    <div class="content-grid">
+      <div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Advisor Profile</span></div>
+          <div style="padding:24px 20px;display:flex;align-items:flex-start;gap:20px">
+            <div style="width:56px;height:56px;border-radius:12px;background:var(--accent-soft,#e8f0fb);border:1px solid var(--accent,#2D6AB5);display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:600;color:var(--accent,#2D6AB5);flex-shrink:0">
+              {{ advisor.first_name|default:advisor.username|slice:":1"|upper }}{{ advisor.last_name|slice:":1"|upper }}
+            </div>
+            <div style="flex:1">
+              <div style="font-size:18px;font-weight:600;color:var(--text-strong,#1A1814);margin-bottom:4px">{{ advisor.get_full_name|default:advisor.username }}</div>
+              <div style="font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:0.8px;margin-bottom:16px">Academic Advisor{% if major %} · {{ major.name }}{% endif %}</div>
+              <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+                <div>
+                  <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:3px">Email</div>
+                  <div style="font-size:13.5px">{{ advisor.email|default:"—" }}</div>
+                </div>
+                <div>
+                  <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:3px">Department</div>
+                  <div style="font-size:13.5px">{% if major %}{{ major.name }}{% else %}—{% endif %}</div>
+                </div>
+                <div>
+                  <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:3px">University ID</div>
+                  <div style="font-size:13.5px">{{ advisor.university_id|default:"—" }}</div>
+                </div>
+                <div>
+                  <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:3px">Role</div>
+                  <div style="font-size:13.5px">{{ advisor.role|title }}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div>
+        <div class="card">
+          <div class="card-header"><span class="card-title">Your Assignment</span></div>
+          <div style="padding:16px 20px;display:flex;flex-direction:column;gap:14px">
+            <div>
+              <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:3px">Your Major</div>
+              <div style="font-size:13.5px;font-weight:500">{% if profile %}{{ profile.major|default:"—" }}{% else %}—{% endif %}</div>
+            </div>
+            <div>
+              <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:3px">Advisor's Department</div>
+              <div style="font-size:13.5px;font-weight:500">{% if major %}{{ major.name }}{% else %}—{% endif %}</div>
+            </div>
+            <div>
+              <div style="font-size:10.5px;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;color:var(--muted);margin-bottom:3px">Current GPA</div>
+              <div style="font-size:13.5px;font-weight:500">{% if profile %}{{ profile.gpa }}{% else %}—{% endif %}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    {% else %}
+    <div class="card">
+      <div style="padding:40px 20px;text-align:center;color:var(--muted);font-size:13px">
+        No advisor has been assigned to you yet. Please contact the registrar's office.
+      </div>
+    </div>
+    {% endif %}
+  </main>
+</div>
+</body>
+</html>
