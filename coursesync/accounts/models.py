@@ -5,6 +5,7 @@ from django.db import models
 class User(AbstractUser):
     class Roles(models.TextChoices):
         STUDENT = "student", "Student"
+        TA = "ta", "Teaching Assistant"
         PROFESSOR = "professor", "Professor"
         ADVISOR = "advisor", "Advisor"
         REGISTRAR = "registrar", "Registrar"
@@ -15,6 +16,9 @@ class User(AbstractUser):
 
     def is_student(self):
         return self.role == self.Roles.STUDENT
+
+    def is_ta(self):
+        return self.role == self.Roles.TA
 
     def is_professor(self):
         return self.role == self.Roles.PROFESSOR

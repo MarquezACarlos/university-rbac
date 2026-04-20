@@ -15,6 +15,7 @@
     }
     .filter-tab:hover { color: var(--text); border-color: var(--accent); }
     .filter-tab.active { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+    .filter-tab.ft-ta.active       { background: var(--amber-dim); color: var(--amber); border-color: var(--amber); }
     .filter-tab.ft-professor.active { background: var(--surface2); color: var(--accent); border-color: var(--accent); }
     .filter-tab.ft-advisor.active { background: var(--green-dim); color: var(--green); border-color: var(--green); }
     .filter-tab.ft-registrar.active { background: var(--amber-dim); color: var(--amber); border-color: var(--amber); }
@@ -36,6 +37,7 @@
 
     .role-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.5px; }
     .rb-student   { background: var(--accent-dim);  color: var(--accent); }
+    .rb-ta        { background: var(--amber-dim);    color: var(--amber); border: 1px solid var(--amber); }
     .rb-professor { background: var(--surface2);     color: var(--accent); border: 1px solid var(--border2); }
     .rb-advisor   { background: var(--green-dim);    color: var(--green); }
     .rb-registrar { background: var(--amber-dim);    color: var(--amber); }
@@ -117,6 +119,9 @@
       <a href="{% url 'users_list' %}?role=student" class="filter-tab {% if active_role == 'student' %}active{% endif %}">
         STUDENT <span style="opacity:.6">({{ role_counts.student }})</span>
       </a>
+      <a href="{% url 'users_list' %}?role=ta" class="filter-tab ft-ta {% if active_role == 'ta' %}active{% endif %}">
+        TA <span style="opacity:.6">({{ role_counts.ta }})</span>
+      </a>
       <a href="{% url 'users_list' %}?role=professor" class="filter-tab ft-professor {% if active_role == 'professor' %}active{% endif %}">
         PROFESSOR <span style="opacity:.6">({{ role_counts.professor }})</span>
       </a>
@@ -151,6 +156,7 @@
             </td>
             <td>
               {% if user.role == "student" %}<span class="role-badge rb-student">STUDENT</span>
+              {% elif user.role == "ta" %}<span class="role-badge rb-ta">TA</span>
               {% elif user.role == "professor" %}<span class="role-badge rb-professor">PROFESSOR</span>
               {% elif user.role == "advisor" %}<span class="role-badge rb-advisor">ADVISOR</span>
               {% elif user.role == "registrar" %}<span class="role-badge rb-registrar">REGISTRAR</span>

@@ -16,10 +16,17 @@
     </div>
     <nav class="nav">
       <div class="nav-section">Teaching</div>
+      {% if readonly %}
+      <a class="nav-item" href="{% url 'ta_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      {% else %}
       <a class="nav-item" href="{% url 'professor_dashboard' %}">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
         Dashboard
       </a>
+      {% endif %}
       <div class="nav-section">Grading</div>
       <a class="nav-item active" href="#">
         <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
@@ -48,7 +55,11 @@
         <div class="page-sub">{{ grade_rows|length }} enrolled student{{ grade_rows|length|pluralize }} · {{ course.credits }} credit{{ course.credits|pluralize }}</div>
       </div>
       <div class="header-actions">
-        <a href="{% url 'professor_dashboard' %}" class="btn btn-ghost">← Back to Dashboard</a>
+        {% if readonly %}
+      <a href="{% url 'ta_dashboard' %}" class="btn btn-ghost">← Back to Dashboard</a>
+      {% else %}
+      <a href="{% url 'professor_dashboard' %}" class="btn btn-ghost">← Back to Dashboard</a>
+      {% endif %}
       </div>
     </div>
 
@@ -66,6 +77,36 @@
         <span style="font-size:12px;color:var(--muted);">Select a grade or leave blank to clear</span>
       </div>
       {% if grade_rows %}
+      {% if readonly %}
+      <table class="grade-table">
+        <thead>
+          <tr>
+            <th>Student</th>
+            <th>ID</th>
+            <th>Final Grade</th>
+            <th>Status</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for row in grade_rows %}
+          <tr>
+            <td><div class="student-name">{{ row.student.get_full_name|default:row.student.username }}</div></td>
+            <td><div class="student-id">{{ row.student.university_id|default:"—" }}</div></td>
+            <td><div class="student-id">{{ row.final_grade|default:"—" }}</div></td>
+            <td>
+              {% if row.status == "graded" %}
+                <span class="status-dot dot-green"></span>Graded
+              {% elif row.status == "at_risk" %}
+                <span class="status-dot dot-red"></span>At risk
+              {% else %}
+                <span class="status-dot dot-amber"></span>Pending
+              {% endif %}
+            </td>
+          </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      {% else %}
       <form method="post">
         {% csrf_token %}
         <table class="grade-table">
@@ -107,6 +148,7 @@
           <button type="submit" class="btn btn-primary">Save Grades</button>
         </div>
       </form>
+      {% endif %}
       {% else %}
       <div style="padding:24px;color:var(--muted);font-size:13px;">No students are enrolled in this course.</div>
       {% endif %}

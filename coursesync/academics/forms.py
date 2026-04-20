@@ -1,7 +1,7 @@
 from django import forms
 from django.contrib.auth.password_validation import validate_password
 
-from .models import Course, Major, StudentProfile
+from .models import Course, Major, StudentProfile, TAProfile
 from accounts.models import User
 
 
@@ -23,6 +23,7 @@ class CourseForm(forms.ModelForm):
 class CreateUserForm(forms.Form):
     ROLE_CHOICES = [
         ("student", "Student"),
+        ("ta", "Teaching Assistant"),
         ("advisor", "Advisor"),
         ("registrar", "Registrar"),
     ]
@@ -38,6 +39,11 @@ class CreateUserForm(forms.Form):
         queryset=Major.objects.select_related("advisor").all(),
         required=False,
         empty_label="— Select a major —",
+    )
+    ta_course = forms.ModelChoiceField(
+        queryset=Course.objects.select_related("professor").all(),
+        required=False,
+        empty_label="— Select a course —",
     )
 
     def clean_username(self):
@@ -62,8 +68,10 @@ class CreateUserForm(forms.Form):
         cleaned_data = super().clean()
         role = cleaned_data.get("role")
         major = cleaned_data.get("major")
-        if role == "student" and not major:
-            self.add_error("major", "A major is required for student accounts.")
+        if role in ("student", "ta") and not major:
+            self.add_error("major", "A major is required for student and TA accounts.")
+        if role == "ta" and not cleaned_data.get("ta_course"):
+            self.add_error("ta_course", "A course assignment is required for TA accounts.")
         return cleaned_data
 
     def save(self):
@@ -79,12 +87,16 @@ class CreateUserForm(forms.Form):
             university_id=data.get("university_id") or None,
         )
         major = data.get("major")
-        if role == "student" and major:
+        if role in ("student", "ta") and major:
             StudentProfile.objects.create(
                 user=user,
                 major=major.name,
                 advisor=major.advisor,
             )
+        if role == "ta":
+            ta_course = data.get("ta_course")
+            if ta_course:
+                TAProfile.objects.create(user=user, course=ta_course)
         elif role == "advisor" and major:
             major.advisor = user
             major.save()
@@ -98,6 +110,7 @@ CreateStudentForm = CreateUserForm
 class EditUserForm(forms.ModelForm):
     ROLE_CHOICES = [
         ("student", "Student"),
+        ("ta", "Teaching Assistant"),
         ("professor", "Professor"),
         ("advisor", "Advisor"),
         ("registrar", "Registrar"),
@@ -111,10 +124,29 @@ class EditUserForm(forms.ModelForm):
         label="New Password",
         help_text="Leave blank to keep current password.",
     )
+    ta_course = forms.ModelChoiceField(
+        queryset=Course.objects.select_related("professor").all(),
+        required=False,
+        empty_label="— Select a course —",
+    )
 
     class Meta:
         model = User
         fields = ["first_name", "last_name", "username", "email", "university_id", "role"]
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            try:
+                self.initial["ta_course"] = self.instance.ta_profile.course
+            except TAProfile.DoesNotExist:
+                pass
+
+    def clean(self):
+        cleaned_data = super().clean()
+        if cleaned_data.get("role") == "ta" and not cleaned_data.get("ta_course"):
+            self.add_error("ta_course", "A course assignment is required for TA accounts.")
+        return cleaned_data
 
     def clean_username(self):
         username = self.cleaned_data["username"]
@@ -144,6 +176,12 @@ class EditUserForm(forms.ModelForm):
             user.set_password(password)
         if commit:
             user.save()
+        role = self.cleaned_data.get("role")
+        ta_course = self.cleaned_data.get("ta_course")
+        if role == "ta" and ta_course:
+            TAProfile.objects.update_or_create(user=user, defaults={"course": ta_course})
+        elif role != "ta":
+            TAProfile.objects.filter(user=user).delete()
         return user
 
 

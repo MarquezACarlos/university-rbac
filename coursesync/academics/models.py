@@ -184,3 +184,19 @@ class Grade(models.Model):
 
     def __str__(self):
         return f"{self.enrollment} - {self.final_grade or 'N/A'}"
+
+
+class TAProfile(models.Model):
+    user = models.OneToOneField(
+        User, on_delete=models.CASCADE,
+        related_name="ta_profile",
+        limit_choices_to={"role": "ta"},
+    )
+    course = models.ForeignKey(
+        Course, on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name="teaching_assistants",
+    )
+
+    def __str__(self):
+        return f"{self.user.get_full_name()} — TA for {self.course}"

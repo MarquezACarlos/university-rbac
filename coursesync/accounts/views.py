@@ -39,6 +39,8 @@ def dashboard_router(request):
 
     if user.role == "student":
         return redirect("student_dashboard")
+    elif user.role == "ta":
+        return redirect("ta_dashboard")
     elif user.role == "professor":
         return redirect("professor_dashboard")
     elif user.role == "advisor":

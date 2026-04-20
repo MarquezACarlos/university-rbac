@@ -130,6 +130,14 @@
             {% if form.email.errors %}<ul class="errorlist">{% for e in form.email.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
           </div>
 
+          <!-- TA Course assignment (TA only) -->
+          <div class="field" id="ta-course-field">
+            <label for="{{ form.ta_course.id_for_label }}">Assigned Course (required for TA)</label>
+            {{ form.ta_course }}
+            {% if form.ta_course.errors %}<ul class="errorlist">{% for e in form.ta_course.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            <div class="field-hint">The course this TA will assist with.</div>
+          </div>
+
           <!-- New password -->
           <div class="field">
             <label for="{{ form.new_password.id_for_label }}">New Password</label>
@@ -147,5 +155,13 @@
     </div>
   </main>
 </div>
+<script>
+  function syncTACourseField() {
+    const role = document.getElementById('{{ form.role.id_for_label }}').value;
+    document.getElementById('ta-course-field').style.display = role === 'ta' ? '' : 'none';
+  }
+  document.getElementById('{{ form.role.id_for_label }}').addEventListener('change', syncTACourseField);
+  syncTACourseField();
+</script>
 </body>
 </html>

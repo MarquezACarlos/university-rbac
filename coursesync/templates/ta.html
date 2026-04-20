@@ -1,0 +1,213 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TA Portal — CourseSync</title>
+  <link rel="stylesheet" href="{% static 'css/student.css' %}">
+  <style>
+    .ta-badge { display: inline-block; padding: 2px 8px; border-radius: 4px; font-family: var(--mono); font-size: 10px; font-weight: 600; letter-spacing: 0.5px; background: var(--amber-dim, #fef3c7); color: var(--amber, #d97706); border: 1px solid var(--amber, #d97706); }
+    .course-count { font-family: var(--mono); font-size: 11px; color: var(--muted); }
+  </style>
+</head>
+<body>
+<div class="shell">
+  <aside class="sidebar">
+    <div class="brand">
+      <div class="brand-mark">CourseSync</div>
+      <div class="brand-role">TA Portal</div>
+    </div>
+    <nav class="nav">
+      <div class="nav-section">Overview</div>
+      <a class="nav-item active" href="{% url 'ta_dashboard' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="7" height="7" rx="1"/><rect x="14" y="3" width="7" height="7" rx="1"/><rect x="3" y="14" width="7" height="7" rx="1"/><rect x="14" y="14" width="7" height="7" rx="1"/></svg>
+        Dashboard
+      </a>
+      <a class="nav-item" href="{% url 'my_courses' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 6h16M4 10h16M4 14h8M4 18h8"/></svg>
+        My Courses
+      </a>
+      <div class="nav-section">Academic</div>
+      <a class="nav-item" href="{% url 'student_grades' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/></svg>
+        Grades & GPA
+      </a>
+      <a class="nav-item" href="{% url 'enrollment_history' %}">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/></svg>
+        Enrollment History
+      </a>
+      <div class="nav-section">TA Tools</div>
+      <a class="nav-item" href="#course-roster">
+        <svg class="nav-icon" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-6 9l2 2 4-4"/></svg>
+        Course Grade Rosters
+      </a>
+    </nav>
+    <div class="sidebar-footer">
+      <div class="user-card">
+        <div class="avatar">{{ request.user.first_name|default:request.user.username|slice:":1"|upper }}{{ request.user.last_name|slice:":1"|upper }}</div>
+        <div>
+          <div class="user-name">{{ request.user.get_full_name|default:request.user.username }}</div>
+          <div class="user-id">{{ request.user.university_id|default:request.user.username }}</div>
+        </div>
+      </div>
+      <form method="post" action="{% url 'logout' %}">
+        {% csrf_token %}
+        <button type="submit" class="logout-btn">Logout</button>
+      </form>
+    </div>
+  </aside>
+
+  <main class="main">
+    <div class="page-header">
+      <div>
+        <div class="page-title">Welcome, {{ request.user.first_name|default:request.user.username }} <span class="ta-badge">TA</span></div>
+        <div class="page-sub">{{ request.user.university_id|default:"" }}{% if profile %} · {{ profile.major }}{% endif %}</div>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat accent">
+        <div class="stat-label">Enrolled Courses</div>
+        <div class="stat-value">{{ enrollments|length }}</div>
+        <div class="stat-sub">approved this semester</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Cumulative GPA</div>
+        <div class="stat-value">{% if profile %}{{ profile.gpa }}{% else %}—{% endif %}</div>
+        <div class="stat-sub">current standing</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Credits Enrolled</div>
+        <div class="stat-value">{{ credits_enrolled }}</div>
+        <div class="stat-sub">of 20 max this semester</div>
+      </div>
+      <div class="stat">
+        <div class="stat-label">Credits Earned</div>
+        <div class="stat-value">{{ credits_earned }}</div>
+        <div class="stat-sub">completed &amp; graded</div>
+      </div>
+    </div>
+
+    <div class="content-grid">
+      <div>
+        <!-- Enrolled Courses (student view) -->
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="card-header">
+            <span class="card-title">My Enrollments</span>
+          </div>
+          {% if enrollments %}
+          <div class="col-header" style="grid-template-columns: 3fr 1fr 2fr">
+            <span class="col-label">Course</span>
+            <span class="col-label">Credits</span>
+            <span class="col-label">Professor</span>
+          </div>
+          <div class="card-body">
+            {% for enrollment in enrollments %}
+            <div class="course-row" style="grid-template-columns: 3fr 1fr 2fr">
+              <div>
+                <div class="course-name">{{ enrollment.course.title }}</div>
+                <div class="course-code">{{ enrollment.course.code }}</div>
+              </div>
+              <div>{{ enrollment.course.credits }}</div>
+              <div>{{ enrollment.course.professor.get_full_name|default:"TBA" }}</div>
+            </div>
+            {% endfor %}
+          </div>
+          {% else %}
+          <div style="padding:20px;color:var(--muted);font-size:13px;text-align:center">No approved enrollments yet.</div>
+          {% endif %}
+        </div>
+
+        {% if pending_enrollments or denied_enrollments %}
+        <div class="card" style="margin-bottom: 20px;">
+          <div class="card-header">
+            <span class="card-title">My Enrollment Requests</span>
+          </div>
+          <div class="card-body">
+            {% for enrollment in pending_enrollments %}
+            <div class="course-row" style="grid-template-columns: 3fr 1fr">
+              <div>
+                <div class="course-name">{{ enrollment.course.title }}</div>
+                <div class="course-code">{{ enrollment.course.code }}</div>
+              </div>
+              <div><span class="status-pill pill-pending">Pending advisor review</span></div>
+            </div>
+            {% endfor %}
+            {% for enrollment in denied_enrollments %}
+            <div class="course-row" style="grid-template-columns: 3fr 1fr">
+              <div>
+                <div class="course-name">{{ enrollment.course.title }}</div>
+                <div class="course-code">{{ enrollment.course.code }}</div>
+              </div>
+              <div><span class="status-pill pill-denied">Denied</span></div>
+            </div>
+            {% endfor %}
+          </div>
+        </div>
+        {% endif %}
+
+        <!-- TA: Course Grade Roster (assigned course only) -->
+        <div class="card" id="course-roster">
+          <div class="card-header">
+            <span class="card-title">Course Grade Roster</span>
+            <span class="course-count">read-only</span>
+          </div>
+          {% if ta_course %}
+          <div class="col-header" style="grid-template-columns: 3fr 1fr 2fr 1fr">
+            <span class="col-label">Course</span>
+            <span class="col-label">Credits</span>
+            <span class="col-label">Professor</span>
+            <span class="col-label">Students</span>
+          </div>
+          <div class="card-body">
+            <a href="{% url 'ta_course_grades' ta_course.id %}" class="course-row" style="grid-template-columns: 3fr 1fr 2fr 1fr; text-decoration: none; color: inherit; display: grid;">
+              <div>
+                <div class="course-name">{{ ta_course.title }}</div>
+                <div class="course-code">{{ ta_course.code }}</div>
+              </div>
+              <div>{{ ta_course.credits }}</div>
+              <div>{{ ta_course.professor.get_full_name|default:"TBA" }}</div>
+              <div>{{ ta_course.student_count }}</div>
+            </a>
+          </div>
+          {% else %}
+          <div style="padding:20px;color:var(--muted);font-size:13px;text-align:center">No course assigned. Contact your system administrator.</div>
+          {% endif %}
+        </div>
+      </div>
+
+      <div>
+        <!-- Academic Standing -->
+        <div class="card" style="margin-bottom: 14px;">
+          <div class="card-header"><span class="card-title">Academic Standing</span></div>
+          {% if profile %}
+          <div class="gpa-display">
+            <div class="gpa-ring">
+              <svg width="120" height="120" viewBox="0 0 120 120">
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#E2DDD5" stroke-width="8"/>
+                <circle cx="60" cy="60" r="50" fill="none" stroke="#2D5A3D" stroke-width="8" stroke-dasharray="226 314" stroke-linecap="round"/>
+              </svg>
+              <div class="gpa-center">
+                <div class="gpa-number">{{ profile.gpa }}</div>
+                <div class="gpa-label">GPA</div>
+              </div>
+            </div>
+            <div class="standing-badge">{{ profile.major }}</div>
+          </div>
+          {% else %}
+          <div style="padding:20px;color:var(--muted);font-size:13px;text-align:center">No academic profile found.</div>
+          {% endif %}
+        </div>
+
+        <div class="enroll-card">
+          <div class="enroll-title">Register for Courses</div>
+          <div class="enroll-sub">Browse the catalog and submit requests to your advisor</div>
+          <a href="{% url 'course_catalog' %}" class="enroll-btn" style="display:block;text-align:center;text-decoration:none">Browse Course Catalog</a>
+        </div>
+      </div>
+    </div>
+  </main>
+</div>
+</body>
+</html>

@@ -33,8 +33,9 @@
     .btn-ghost { background: var(--surface2); color: var(--text); border: 1px solid var(--border2); }
     .role-pills { display: flex; gap: 8px; flex-wrap: wrap; }
     .role-pill { padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 500; cursor: pointer; border: 1px solid var(--border2); background: var(--surface2); color: var(--muted); font-family: var(--mono); transition: all 0.15s; }
-    .role-pill.active-student { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
-    .role-pill.active-advisor { background: var(--green-dim); color: var(--green); border-color: var(--green); }
+    .role-pill.active-student   { background: var(--accent-dim); color: var(--accent); border-color: var(--accent); }
+    .role-pill.active-ta        { background: var(--amber-dim); color: var(--amber); border-color: var(--amber); }
+    .role-pill.active-advisor   { background: var(--green-dim); color: var(--green); border-color: var(--green); }
     .role-pill.active-registrar { background: var(--amber-dim); color: var(--amber); border-color: var(--amber); }
     #major-field { transition: opacity 0.2s; }
     .major-table { width: 100%; border-collapse: collapse; margin-top: 24px; }
@@ -105,6 +106,7 @@
             <label>Role</label>
             <div class="role-pills">
               <button type="button" class="role-pill" data-role="student" onclick="setRole('student')">STUDENT</button>
+              <button type="button" class="role-pill" data-role="ta" onclick="setRole('ta')">TA</button>
               <button type="button" class="role-pill" data-role="advisor" onclick="setRole('advisor')">ADVISOR</button>
               <button type="button" class="role-pill" data-role="registrar" onclick="setRole('registrar')">REGISTRAR</button>
             </div>
@@ -154,12 +156,20 @@
             {% if form.password.errors %}<ul class="errorlist">{% for e in form.password.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
           </div>
 
-          <!-- Major (students required, advisors optional) -->
+          <!-- Major (students/TAs required, advisors optional) -->
           <div class="field" id="major-field">
             <label for="{{ form.major.id_for_label }}" id="major-label">Major</label>
             {{ form.major }}
             {% if form.major.errors %}<ul class="errorlist">{% for e in form.major.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
             <div class="field-hint" id="major-hint"></div>
+          </div>
+
+          <!-- TA Course assignment (TA only) -->
+          <div class="field" id="ta-course-field" style="display:none">
+            <label for="{{ form.ta_course.id_for_label }}">Assigned Course (required)</label>
+            {{ form.ta_course }}
+            {% if form.ta_course.errors %}<ul class="errorlist">{% for e in form.ta_course.errors %}<li>{{ e }}</li>{% endfor %}</ul>{% endif %}
+            <div class="field-hint">The course this TA will assist with.</div>
           </div>
 
         </div>
@@ -202,15 +212,16 @@
   const currentRole = "{{ form.role.value|default:'student' }}";
 
   const hints = {
-    student:  'Required — advisor is automatically assigned from the major.',
-    advisor:  'Optional — assigns this advisor as the responsible advisor for the selected major.',
+    student:   'Required — advisor is automatically assigned from the major.',
+    ta:        'Required — advisor is automatically assigned from the major.',
+    advisor:   'Optional — assigns this advisor as the responsible advisor for the selected major.',
     registrar: '',
   };
 
   function setRole(role) {
     document.getElementById('role-input').value = role;
     document.querySelectorAll('.role-pill').forEach(p =>
-      p.classList.remove('active-student', 'active-advisor', 'active-registrar')
+      p.classList.remove('active-student', 'active-ta', 'active-advisor', 'active-registrar')
     );
     const pill = document.querySelector(`.role-pill[data-role="${role}"]`);
     if (pill) pill.classList.add(`active-${role}`);
@@ -219,12 +230,16 @@
     const majorLabel = document.getElementById('major-label');
     const majorHint  = document.getElementById('major-hint');
 
+    const taCourseField = document.getElementById('ta-course-field');
+
     if (role === 'registrar') {
       majorField.style.display = 'none';
+      taCourseField.style.display = 'none';
     } else {
       majorField.style.display = '';
-      majorLabel.textContent = role === 'student' ? 'Major (required)' : 'Major (optional)';
+      majorLabel.textContent = (role === 'student' || role === 'ta') ? 'Major (required)' : 'Major (optional)';
       majorHint.textContent  = hints[role] || '';
+      taCourseField.style.display = role === 'ta' ? '' : 'none';
     }
   }
 
