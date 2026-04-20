@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{{ request.session.theme|default:'dark' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -59,6 +59,17 @@
           <div class="user-title">{{ request.user.role|default:"Authenticated User"|title }}</div>
         </div>
       </div>
+      <form method="post" action="{% url 'set_theme' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        {% if request.session.theme == "light" %}
+          <input type="hidden" name="theme" value="dark">
+          <button type="submit" class="theme-btn">🌙 Dark Mode</button>
+        {% else %}
+          <input type="hidden" name="theme" value="light">
+          <button type="submit" class="theme-btn">☀ Light Mode</button>
+        {% endif %}
+      </form>
       <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
         <button type="submit" class="logout-btn">Logout</button>
@@ -101,15 +112,25 @@
           </div>
           <div class="course-grid">
             {% for course in courses %}
-            <a href="{% url 'professor_course_grades' course.id %}" class="course-card" style="text-decoration:none;color:inherit;display:block;">
-              <div class="course-tag">{{ course.code }}</div>
-              <div class="course-name">{{ course.title }}</div>
-              <div class="course-meta">{{ course.credits }} credit{{ course.credits|pluralize }}{% if course.capacity %} · Cap: {{ course.capacity }}{% endif %}</div>
-              <div class="course-stats">
-                <div class="cs-item"><div class="cs-val">{{ course.student_count }}</div><div class="cs-lbl">Students</div></div>
-                <div class="cs-item"><div class="cs-val">{{ course.credits }}</div><div class="cs-lbl">Credits</div></div>
+            <div class="course-card" style="display:block;">
+              <a href="{% url 'professor_course_grades' course.id %}" style="text-decoration:none;color:inherit;display:block;">
+                <div class="course-tag">{{ course.code }}</div>
+                <div class="course-name">{{ course.title }}</div>
+                <div class="course-meta">{{ course.credits }} credit{{ course.credits|pluralize }}{% if course.capacity %} · Cap: {{ course.capacity }}{% endif %}</div>
+                <div class="course-stats">
+                  <div class="cs-item"><div class="cs-val">{{ course.student_count }}</div><div class="cs-lbl">Students</div></div>
+                  <div class="cs-item"><div class="cs-val">{{ course.credits }}</div><div class="cs-lbl">Credits</div></div>
+                </div>
+              </a>
+              <div style="margin-top:10px;padding-top:10px;border-top:1px solid var(--border2,var(--border));display:flex;align-items:center;justify-content:space-between;">
+                {% with ta=course.teaching_assistants.first %}
+                <div style="font-size:11px;color:var(--muted);">
+                  TA: {% if ta %}{{ ta.user.get_full_name }}{% else %}<span style="color:var(--amber);">Unassigned</span>{% endif %}
+                </div>
+                <a href="{% url 'professor_assign_ta' course.id %}" style="font-size:11px;color:var(--accent);text-decoration:none;">{% if ta %}Change TA →{% else %}Assign TA →{% endif %}</a>
+                {% endwith %}
               </div>
-            </a>
+            </div>
             {% empty %}
             <div style="padding:20px;color:var(--muted);font-size:13px;grid-column:span 2">No courses assigned yet.</div>
             {% endfor %}

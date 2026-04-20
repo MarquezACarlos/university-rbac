@@ -135,3 +135,15 @@
   background: var(--surface);
   color: var(--accent);
 }
+/* Dark mode override */
+html[data-theme="dark"] {
+  --bg: #0F1117; --surface: #161820; --surface2: #1C1E28; --border: #2A2D38;
+  --text: #E8E9EF; --muted: #6B6F82; --accent: #7B6FF5; --accent-light: #1E1A40;
+  --green: #4CAF82; --green-light: #142B1E; --amber: #F5A623; --amber-light: #2A1F0A;
+  --red: #E05C5C; --red-light: #2A1414;
+}
+
+.theme-btn { width:100%; padding:6px 12px; margin-top:8px; border:1px solid var(--border);
+  border-radius:7px; background:transparent; color:var(--muted); font-size:12px;
+  cursor:pointer; transition:all 0.15s; text-align:left; font-family:inherit; }
+.theme-btn:hover { background:var(--surface2); color:var(--text); }

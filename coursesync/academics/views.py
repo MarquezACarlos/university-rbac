@@ -2,6 +2,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.shortcuts import get_object_or_404, redirect, render
 from django.db.models import Count, Q, Sum
+from django.core.exceptions import PermissionDenied
 
 from accounts.decorators import role_required
 from .forms import CourseForm, CreateUserForm, EditUserForm, MajorForm
@@ -17,12 +18,19 @@ GRADE_POINTS = {
     "F": 0.0,
 }
 
+GRADE_CHOICES_LIST = [
+    ("A", "A"), ("A-", "A-"),
+    ("B+", "B+"), ("B", "B"), ("B-", "B-"),
+    ("C+", "C+"), ("C", "C"), ("C-", "C-"),
+    ("D+", "D+"), ("D", "D"), ("F", "F"),
+]
+
 
 def _credit_counts(student):
     """Return (credits_enrolled, credits_earned) for a student."""
     approved = Enrollment.objects.filter(student=student, status="approved").select_related("course")
     credits_enrolled = sum(e.course.credits for e in approved)
-    graded_ids = set(Grade.objects.filter(enrollment__in=approved).values_list("enrollment_id", flat=True))
+    graded_ids = set(Grade.objects.filter(enrollment__in=approved, published=True).values_list("enrollment_id", flat=True))
     credits_earned = (
         sum(e.course.credits for e in approved if e.id in graded_ids)
         + sum(t.credits for t in TranscriptEntry.objects.filter(student=student))
@@ -31,9 +39,9 @@ def _credit_counts(student):
 
 
 def _recalculate_gpa(student):
-    """Recompute GPA from graded enrollments + transcript entries and save to profile."""
+    """Recompute GPA from published graded enrollments + transcript entries and save to profile."""
     approved = Enrollment.objects.filter(student=student, status="approved").select_related("course")
-    grades = Grade.objects.filter(enrollment__in=approved).select_related("enrollment__course")
+    grades = Grade.objects.filter(enrollment__in=approved, published=True).select_related("enrollment__course")
 
     total_points = Decimal("0")
     total_credits = 0
@@ -57,6 +65,15 @@ def _recalculate_gpa(student):
     except StudentProfile.DoesNotExist:
         pass
     return gpa
+
+
+@login_required
+def set_theme(request):
+    if request.method == "POST":
+        theme = request.POST.get("theme", "light")
+        if theme in ("light", "dark"):
+            request.session["theme"] = theme
+    return redirect(request.POST.get("next", "/"))
 
 
 @login_required
@@ -113,12 +130,13 @@ def ta_dashboard(request):
         .exclude(status="denied")
         .values_list("course_id", flat=True)
     )
-    available_courses = Course.objects.exclude(id__in=enrolled_course_ids).select_related("professor")
 
     ta_course = None
     try:
         ta_profile = request.user.ta_profile
         if ta_profile.course_id:
+            # Exclude TA's assigned course from the course catalog
+            enrolled_course_ids.add(ta_profile.course_id)
             ta_course = (
                 Course.objects.filter(id=ta_profile.course_id)
                 .annotate(student_count=Count("enrollments", filter=Q(enrollments__status="approved")))
@@ -127,6 +145,8 @@ def ta_dashboard(request):
             )
     except TAProfile.DoesNotExist:
         pass
+
+    available_courses = Course.objects.exclude(id__in=enrolled_course_ids).select_related("professor")
 
     credits_enrolled, credits_earned = _credit_counts(request.user)
     return render(request, "ta.html", {
@@ -146,31 +166,55 @@ def ta_dashboard(request):
 def ta_course_grades(request, course_id):
     get_object_or_404(TAProfile, user=request.user, course_id=course_id)
     course = get_object_or_404(Course, id=course_id)
+
+    if request.method == "POST":
+        for key, value in request.POST.items():
+            if key.startswith("propose_"):
+                enrollment_id = key[len("propose_"):]
+                enrollment = Enrollment.objects.filter(id=enrollment_id, course=course, status="approved").first()
+                if not enrollment:
+                    continue
+                value = value.strip().upper()
+                if value in GRADE_POINTS:
+                    grade_obj, _ = Grade.objects.get_or_create(enrollment=enrollment)
+                    grade_obj.proposed_grade = value
+                    grade_obj.proposed_by = request.user
+                    grade_obj.save()
+                elif value == "":
+                    Grade.objects.filter(enrollment=enrollment).update(proposed_grade="", proposed_by=None)
+        messages.success(request, f"Grade proposals submitted for {course.code}.")
+        return redirect("ta_course_grades", course_id=course.id)
+
     enrollments = (
         Enrollment.objects.filter(course=course, status="approved")
         .select_related("student")
         .order_by("student__last_name", "student__first_name")
     )
+    grade_choices = [g for g, _ in GRADE_CHOICES_LIST]
     grade_rows = []
     for enrollment in enrollments:
         grade_obj = Grade.objects.filter(enrollment=enrollment).first()
-        final_grade = grade_obj.final_grade if grade_obj else ""
-        numeric = float(grade_obj.numeric_grade) if grade_obj else None
+        final_grade = grade_obj.final_grade if (grade_obj and grade_obj.published) else ""
+        proposed_grade = grade_obj.proposed_grade if grade_obj else ""
+        numeric = float(grade_obj.numeric_grade) if (grade_obj and grade_obj.numeric_grade) else None
         if final_grade:
             status = "at_risk" if numeric is not None and numeric < 1.0 else "graded"
+        elif proposed_grade:
+            status = "proposed"
         else:
             status = "pending"
         grade_rows.append({
             "enrollment": enrollment,
             "student": enrollment.student,
             "final_grade": final_grade,
+            "proposed_grade": proposed_grade,
             "status": status,
         })
     return render(request, "course_grades.html", {
         "course": course,
         "grade_rows": grade_rows,
-        "grade_choices": [],
-        "readonly": True,
+        "grade_choices": grade_choices,
+        "is_ta": True,
     })
 
 
@@ -180,7 +224,7 @@ def professor_dashboard(request):
     courses = list(
         Course.objects.filter(professor=request.user).annotate(
             student_count=Count("enrollments", filter=Q(enrollments__status="approved"))
-        )
+        ).prefetch_related("teaching_assistants__user")
     )
     total_students = sum(c.student_count for c in courses)
 
@@ -196,27 +240,58 @@ def professor_course_grades(request, course_id):
     course = get_object_or_404(Course, id=course_id, professor=request.user)
 
     if request.method == "POST":
-        for key, value in request.POST.items():
-            if key.startswith("grade_"):
-                enrollment_id = key[len("grade_"):]
-                enrollment = Enrollment.objects.filter(id=enrollment_id, course=course, status="approved").first()
-                if not enrollment:
-                    continue
-                value = value.strip().upper()
-                if value in GRADE_POINTS:
-                    Grade.objects.update_or_create(
-                        enrollment=enrollment,
-                        defaults={
-                            "final_grade": value,
-                            "numeric_grade": Decimal(str(GRADE_POINTS[value])),
-                        },
-                    )
+        approve_id = request.POST.get("approve_proposal")
+        reject_id = request.POST.get("reject_proposal")
+
+        if approve_id:
+            enrollment = Enrollment.objects.filter(id=approve_id, course=course, status="approved").first()
+            if enrollment:
+                grade_obj = Grade.objects.filter(enrollment=enrollment).first()
+                if grade_obj and grade_obj.proposed_grade:
+                    override = request.POST.get(f"grade_{approve_id}", "").strip().upper()
+                    accepted_grade = override if override in GRADE_POINTS else grade_obj.proposed_grade
+                    grade_obj.final_grade = accepted_grade
+                    grade_obj.numeric_grade = Decimal(str(GRADE_POINTS[accepted_grade]))
+                    grade_obj.proposed_grade = ""
+                    grade_obj.proposed_by = None
+                    grade_obj.published = True
+                    grade_obj.save()
                     _recalculate_gpa(enrollment.student)
-                elif value == "":
-                    Grade.objects.filter(enrollment=enrollment).delete()
-                    _recalculate_gpa(enrollment.student)
-        messages.success(request, f"Grades saved for {course.code}.")
-        return redirect("professor_course_grades", course_id=course.id)
+                    messages.success(request, f"Grade approved for {enrollment.student.get_full_name()}.")
+            return redirect("professor_course_grades", course_id=course.id)
+
+        elif reject_id:
+            enrollment = Enrollment.objects.filter(id=reject_id, course=course, status="approved").first()
+            if enrollment:
+                Grade.objects.filter(enrollment=enrollment).update(proposed_grade="", proposed_by=None)
+                messages.success(request, f"Proposed grade rejected for {enrollment.student.get_full_name()}.")
+            return redirect("professor_course_grades", course_id=course.id)
+
+        else:
+            for key, value in request.POST.items():
+                if key.startswith("grade_"):
+                    enrollment_id = key[len("grade_"):]
+                    enrollment = Enrollment.objects.filter(id=enrollment_id, course=course, status="approved").first()
+                    if not enrollment:
+                        continue
+                    value = value.strip().upper()
+                    if value in GRADE_POINTS:
+                        Grade.objects.update_or_create(
+                            enrollment=enrollment,
+                            defaults={
+                                "final_grade": value,
+                                "numeric_grade": Decimal(str(GRADE_POINTS[value])),
+                                "proposed_grade": "",
+                                "proposed_by": None,
+                                "published": True,
+                            },
+                        )
+                        _recalculate_gpa(enrollment.student)
+                    elif value == "":
+                        Grade.objects.filter(enrollment=enrollment).delete()
+                        _recalculate_gpa(enrollment.student)
+            messages.success(request, f"Grades saved for {course.code}.")
+            return redirect("professor_course_grades", course_id=course.id)
 
     enrollments = (
         Enrollment.objects.filter(course=course, status="approved")
@@ -227,29 +302,100 @@ def professor_course_grades(request, course_id):
     for enrollment in enrollments:
         grade_obj = Grade.objects.filter(enrollment=enrollment).first()
         final_grade = grade_obj.final_grade if grade_obj else ""
-        numeric = float(grade_obj.numeric_grade) if grade_obj else None
-        if final_grade:
+        proposed_grade = grade_obj.proposed_grade if grade_obj else ""
+        published = grade_obj.published if grade_obj else False
+        numeric = float(grade_obj.numeric_grade) if (grade_obj and grade_obj.numeric_grade) else None
+        if final_grade and published:
             status = "at_risk" if numeric is not None and numeric < 1.0 else "graded"
+        elif proposed_grade:
+            status = "proposed"
         else:
             status = "pending"
         grade_rows.append({
             "enrollment": enrollment,
             "student": enrollment.student,
             "final_grade": final_grade,
+            "proposed_grade": proposed_grade,
+            "proposed_by": grade_obj.proposed_by if grade_obj else None,
+            "published": published,
             "status": status,
         })
 
-    grade_choices = [g for g, _ in [
-        ("A", "A"), ("A-", "A-"),
-        ("B+", "B+"), ("B", "B"), ("B-", "B-"),
-        ("C+", "C+"), ("C", "C"), ("C-", "C-"),
-        ("D+", "D+"), ("D", "D"), ("F", "F"),
-    ]]
+    grade_choices = [g for g, _ in GRADE_CHOICES_LIST]
 
     return render(request, "course_grades.html", {
         "course": course,
         "grade_rows": grade_rows,
         "grade_choices": grade_choices,
+        "is_ta": False,
+    })
+
+
+@login_required
+@role_required("professor")
+def professor_assign_ta(request, course_id):
+    from accounts.models import User as UserModel
+    course = get_object_or_404(Course, id=course_id, professor=request.user)
+    current_ta_profile = TAProfile.objects.filter(course=course).select_related("user").first()
+
+    if request.method == "POST":
+        action = request.POST.get("action")
+
+        if action == "assign":
+            student_id = request.POST.get("student_id")
+            student = get_object_or_404(UserModel, id=student_id, role="student")
+
+            if Enrollment.objects.filter(student=student, course=course, status__in=["approved", "pending"]).exists():
+                messages.error(
+                    request,
+                    f"{student.get_full_name()} is currently enrolled in {course.code}. "
+                    "They must be dropped from the course before being assigned as TA."
+                )
+                return redirect("professor_assign_ta", course_id=course_id)
+
+            if current_ta_profile:
+                old_ta = current_ta_profile.user
+                current_ta_profile.delete()
+                old_ta.role = "student"
+                old_ta.save()
+
+            student.role = "ta"
+            student.save()
+            TAProfile.objects.create(user=student, course=course)
+            messages.success(request, f"{student.get_full_name()} has been assigned as TA for {course.code}.")
+            return redirect("professor_dashboard")
+
+        elif action == "remove":
+            if current_ta_profile:
+                old_ta = current_ta_profile.user
+                current_ta_profile.delete()
+                old_ta.role = "student"
+                old_ta.save()
+                messages.success(request, f"{old_ta.get_full_name()} has been removed as TA for {course.code}.")
+            return redirect("professor_assign_ta", course_id=course_id)
+
+    enrolled_ids = set(
+        Enrollment.objects.filter(course=course, status__in=["approved", "pending"])
+        .values_list("student_id", flat=True)
+    )
+    search_query = request.GET.get("q", "").strip()
+    available_students = (
+        UserModel.objects.filter(role="student")
+        .exclude(id__in=enrolled_ids)
+        .order_by("last_name", "first_name")
+    )
+    if search_query:
+        available_students = available_students.filter(
+            Q(first_name__icontains=search_query) |
+            Q(last_name__icontains=search_query) |
+            Q(username__icontains=search_query)
+        )
+
+    return render(request, "professor_assign_ta.html", {
+        "course": course,
+        "current_ta": current_ta_profile.user if current_ta_profile else None,
+        "available_students": available_students,
+        "search_query": search_query,
     })
 
 
@@ -340,7 +486,6 @@ def sysadmin_dashboard(request):
 def rbac_policies(request):
     roles = ["student", "ta", "professor", "advisor", "registrar", "sysadmin"]
 
-    # Each policy: (category, label, set of roles that have this permission)
     policies = [
         ("Enrollment", "Request course enrollment",        {"student", "ta"}),
         ("Enrollment", "View own enrollments",             {"student", "ta"}),
@@ -348,26 +493,26 @@ def rbac_policies(request):
         ("Enrollment", "Deny enrollment requests",         {"advisor"}),
         ("Courses",    "View available courses",           {"student", "ta", "professor", "advisor", "registrar", "sysadmin"}),
         ("Courses",    "View own course roster",           {"professor"}),
-        ("Courses",    "View all course grade rosters",    {"ta"}),
+        ("Courses",    "Propose grades for course",        {"ta"}),
         ("Courses",    "Create courses",                   {"registrar"}),
         ("Courses",    "Edit courses",                     {"registrar"}),
         ("Courses",    "Delete courses",                   {"registrar"}),
-        ("Grades",     "View own grades",                  {"student", "ta"}),
-        ("Grades",     "View course grades (read-only)",   {"ta"}),
-        ("Grades",     "Enter / edit grades",              {"professor"}),
+        ("Grades",     "View own grades (published only)", {"student", "ta"}),
+        ("Grades",     "Propose grades",                   {"ta"}),
+        ("Grades",     "Approve / enter / publish grades", {"professor"}),
+        ("Grades",     "Reject TA grade proposals",        {"professor"}),
+        ("TA Mgmt",    "Assign TA to own course",          {"professor"}),
         ("Majors",     "Create majors",                    {"registrar"}),
         ("Students",   "View assigned advisees",           {"advisor"}),
         ("Students",   "View pending requests (own advisees)", {"advisor"}),
-        ("Students",   "View all student enrollments",     set()),
         ("Users",      "Create user accounts",             {"sysadmin"}),
-        ("Users",      "Edit user accounts",               {"sysadmin"}),
+        ("Users",      "Edit user accounts / roles",       {"sysadmin"}),
         ("Users",      "Delete user accounts",             {"sysadmin"}),
         ("Users",      "View all users",                   {"sysadmin"}),
         ("System",     "Access admin dashboard",           {"sysadmin"}),
         ("System",     "Manage RBAC policies (view)",      {"sysadmin"}),
     ]
 
-    # Group by category
     from itertools import groupby
     categories = []
     for cat, items in groupby(policies, key=lambda p: p[0]):
@@ -423,6 +568,14 @@ def course_catalog(request):
         .exclude(status="denied")
         .values_list("course_id", flat=True)
     )
+    # TAs cannot enroll in their assigned course
+    if request.user.role == "ta":
+        try:
+            ta_profile = request.user.ta_profile
+            if ta_profile.course_id:
+                enrolled_course_ids.add(ta_profile.course_id)
+        except TAProfile.DoesNotExist:
+            pass
     available_courses = Course.objects.exclude(id__in=enrolled_course_ids).select_related("professor")
     return render(request, "course_catalog.html", {
         "available_courses": available_courses,
@@ -488,7 +641,8 @@ def student_grades(request):
         .order_by("course__code")
     )
     for enrollment in enrollments:
-        grade = Grade.objects.filter(enrollment=enrollment).first()
+        # Only show published grades to the student/TA
+        grade = Grade.objects.filter(enrollment=enrollment, published=True).first()
         graded_rows.append({
             "enrollment": enrollment,
             "course": enrollment.course,
@@ -515,7 +669,8 @@ def student_course_detail(request, enrollment_id):
     enrollment = get_object_or_404(
         Enrollment, id=enrollment_id, student=request.user, status="approved"
     )
-    grade = Grade.objects.filter(enrollment=enrollment).first()
+    # Only show published grades
+    grade = Grade.objects.filter(enrollment=enrollment, published=True).first()
     return render(request, "student_course_detail.html", {
         "enrollment": enrollment,
         "course": enrollment.course,
@@ -541,6 +696,17 @@ def enrollment_history(request):
 def propose_enrollment(request, course_id):
     if request.method == "POST":
         course = get_object_or_404(Course, id=course_id)
+
+        # Block TAs from enrolling in their own assigned course
+        if request.user.role == "ta":
+            try:
+                ta_profile = request.user.ta_profile
+                if ta_profile.course_id == course_id:
+                    messages.error(request, f"TAs cannot enroll in the course they are assisting ({course.code}).")
+                    return redirect("course_catalog")
+            except TAProfile.DoesNotExist:
+                pass
+
         approved_credits = (
             Enrollment.objects.filter(student=request.user, status="approved")
             .select_related("course")
@@ -562,9 +728,7 @@ def propose_enrollment(request, course_id):
 def student_detail(request, student_id):
     from accounts.models import User
     student = get_object_or_404(User, id=student_id, role="student")
-    # Ensure this student is assigned to the requesting advisor
     if not StudentProfile.objects.filter(user=student, advisor=request.user).exists():
-        from django.core.exceptions import PermissionDenied
         raise PermissionDenied
     approved = Enrollment.objects.filter(student=student, status="approved").select_related("course__professor")
     denied = Enrollment.objects.filter(student=student, status="denied").select_related("course__professor", "reviewed_by")
@@ -584,9 +748,7 @@ def student_detail(request, student_id):
 @role_required("advisor")
 def drop_enrollment(request, enrollment_id):
     enrollment = get_object_or_404(Enrollment, id=enrollment_id, status="approved")
-    # Ensure the student belongs to this advisor
     if not StudentProfile.objects.filter(user=enrollment.student, advisor=request.user).exists():
-        from django.core.exceptions import PermissionDenied
         raise PermissionDenied
     if request.method == "POST":
         enrollment.delete()
@@ -598,7 +760,6 @@ def drop_enrollment(request, enrollment_id):
 def approve_drop(request, enrollment_id):
     enrollment = get_object_or_404(Enrollment, id=enrollment_id, status="drop_pending")
     if not StudentProfile.objects.filter(user=enrollment.student, advisor=request.user).exists():
-        from django.core.exceptions import PermissionDenied
         raise PermissionDenied
     if request.method == "POST":
         enrollment.delete()
@@ -611,7 +772,6 @@ def approve_drop(request, enrollment_id):
 def deny_drop(request, enrollment_id):
     enrollment = get_object_or_404(Enrollment, id=enrollment_id, status="drop_pending")
     if not StudentProfile.objects.filter(user=enrollment.student, advisor=request.user).exists():
-        from django.core.exceptions import PermissionDenied
         raise PermissionDenied
     if request.method == "POST":
         enrollment.status = "approved"
@@ -671,13 +831,11 @@ def registrar_student_enrollment(request, student_id):
     from accounts.models import User
     student = get_object_or_404(User, id=student_id, role="student")
     profile = getattr(student, "student_profile", None)
-    # Registrar can only touch denied (history) enrollments, not current approved ones
     denied = Enrollment.objects.filter(student=student, status="denied").select_related("course__professor")
     pending_changes = (
         RegistrarEnrollmentChange.objects.filter(student=student, status="pending")
         .select_related("course", "proposed_by")
     )
-    # Courses already pending a change cannot be proposed again
     pending_course_ids = set(pending_changes.values_list("course_id", flat=True))
     actionable = [e for e in denied if e.course_id not in pending_course_ids]
     credits_enrolled, credits_earned = _credit_counts(student)
@@ -703,7 +861,6 @@ def propose_enrollment_add(request, student_id):
         return redirect("registrar_student_enrollment", student_id=student_id)
     student = get_object_or_404(User, id=student_id, role="student")
     enrollment_id = request.POST.get("enrollment_id")
-    # Only denied enrollments are eligible
     enrollment = get_object_or_404(Enrollment, id=enrollment_id, student=student, status="denied")
     note = request.POST.get("note", "")
     _, created = RegistrarEnrollmentChange.objects.get_or_create(
@@ -725,7 +882,6 @@ def propose_enrollment_remove(request, student_id):
         return redirect("registrar_student_enrollment", student_id=student_id)
     student = get_object_or_404(User, id=student_id, role="student")
     enrollment_id = request.POST.get("enrollment_id")
-    # Only denied enrollments are eligible — cannot touch current approved enrollments
     enrollment = get_object_or_404(Enrollment, id=enrollment_id, student=student, status="denied")
     note = request.POST.get("note", "")
     _, created = RegistrarEnrollmentChange.objects.get_or_create(
@@ -744,7 +900,6 @@ def propose_enrollment_remove(request, student_id):
 def review_enrollment_change(request, change_id):
     change = get_object_or_404(RegistrarEnrollmentChange, id=change_id, status="pending")
     if not StudentProfile.objects.filter(user=change.student, advisor=request.user).exists():
-        from django.core.exceptions import PermissionDenied
         raise PermissionDenied
     if request.method != "POST":
         return redirect("advisor_dashboard")
@@ -759,12 +914,10 @@ def review_enrollment_change(request, change_id):
                     f"credit hours. Adding {change.course.code} would exceed the 20-credit limit."
                 )
                 return redirect("advisor_dashboard")
-            # Promote the existing denied enrollment to approved
             Enrollment.objects.filter(
                 student=change.student, course=change.course, status="denied"
             ).update(status="approved", reviewed_by=request.user)
         elif change.change_type == "remove":
-            # Delete the denied enrollment record from history
             Enrollment.objects.filter(student=change.student, course=change.course, status="denied").delete()
         change.status = "approved"
         change.reviewed_by = request.user

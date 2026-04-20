@@ -20,6 +20,7 @@ from .views import (
     ta_course_grades,
     professor_dashboard,
     professor_course_grades,
+    professor_assign_ta,
     advisor_dashboard,
     registrar_dashboard,
     sysadmin_dashboard,
@@ -37,6 +38,7 @@ from .views import (
     edit_user,
     delete_user,
     create_major,
+    set_theme,
 )
 
 urlpatterns = [
@@ -81,4 +83,6 @@ urlpatterns = [
     path("users/<int:user_id>/delete/", delete_user, name="delete_user"),
     path("students/new/", create_user, name="create_student"),
     path("majors/new/", create_major, name="create_major"),
+    path("professor/courses/<int:course_id>/assign-ta/", professor_assign_ta, name="professor_assign_ta"),
+    path("set-theme/", set_theme, name="set_theme"),
 ]

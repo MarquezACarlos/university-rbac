@@ -144,3 +144,16 @@
 .btn-primary { background: var(--accent); color: white; }
 .btn-primary:hover { opacity: 0.88; }
 .btn-sm { padding: 5px 12px; font-size: 12px; }
+/* Dark mode override */
+html[data-theme="dark"] {
+  --bg: #0F1117; --surface: #161820; --surface2: #1C1E28; --border: #2A2D38;
+  --text: #E8E9EF; --muted: #6B6F82; --accent: #4CAF82; --accent-light: #142B1E;
+  --accent2: #F5A623; --warn: #F5A623; --warn-light: #2A1F0A;
+  --info: #7B9EF5; --info-light: #1A2440;
+}
+html[data-theme="dark"] .pill-denied { background: #2A1414; color: #E05C5C; }
+
+.theme-btn { width:100%; padding:6px 12px; margin-top:8px; border:1px solid var(--border);
+  border-radius:7px; background:transparent; color:var(--muted); font-size:12px;
+  cursor:pointer; transition:all 0.15s; text-align:left; font-family:inherit; }
+.theme-btn:hover { background:var(--bg); color:var(--text); }

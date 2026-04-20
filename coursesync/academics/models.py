@@ -181,6 +181,16 @@ class Grade(models.Model):
     enrollment = models.OneToOneField(Enrollment, on_delete=models.CASCADE, related_name="grade")
     final_grade = models.CharField(max_length=2, blank=True)
     numeric_grade = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    proposed_grade = models.CharField(max_length=2, blank=True)
+    proposed_by = models.ForeignKey(
+        User,
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="proposed_grades",
+        limit_choices_to={"role": "ta"},
+    )
+    published = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.enrollment} - {self.final_grade or 'N/A'}"

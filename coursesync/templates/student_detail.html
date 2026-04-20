@@ -1,6 +1,6 @@
 {% load static %}
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" data-theme="{{ request.session.theme|default:'light' }}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -52,6 +52,17 @@
           <div class="user-title">{{ request.user.role|title }}</div>
         </div>
       </div>
+      <form method="post" action="{% url 'set_theme' %}">
+        {% csrf_token %}
+        <input type="hidden" name="next" value="{{ request.path }}">
+        {% if request.session.theme == "dark" %}
+          <input type="hidden" name="theme" value="light">
+          <button type="submit" class="theme-btn">☀ Light Mode</button>
+        {% else %}
+          <input type="hidden" name="theme" value="dark">
+          <button type="submit" class="theme-btn">🌙 Dark Mode</button>
+        {% endif %}
+      </form>
       <form method="post" action="{% url 'logout' %}">
         {% csrf_token %}
         <button type="submit" class="logout-btn">Logout</button>

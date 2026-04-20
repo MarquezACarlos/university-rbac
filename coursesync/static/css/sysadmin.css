@@ -151,3 +151,16 @@
   background: var(--surface);
   color: var(--accent);
 }
+/* Light mode override */
+html[data-theme="light"] {
+  --bg: #F5F2EB; --surface: #FDFBF7; --surface2: #EEE9DF; --surface3: #E0DDD5;
+  --border: #E2DDD5; --border2: #D8D3C8; --text: #1A1814; --text-bright: #0A0806;
+  --muted: #7A756D; --accent: #2D6AB5; --accent-dim: #E8EFF9;
+  --green: #3A7D5E; --green-dim: #E8F4EE; --amber: #C07B18; --amber-dim: #FEF8EC;
+  --red: #C04040; --red-dim: #FAE8E8; --purple: #7040A0; --purple-dim: #F0EAF8;
+}
+
+.theme-btn { width:100%; padding:6px 12px; margin-top:8px; border:1px solid var(--border);
+  border-radius:7px; background:transparent; color:var(--muted); font-size:12px;
+  cursor:pointer; transition:all 0.15s; text-align:left; font-family:inherit; }
+.theme-btn:hover { background:var(--surface2); color:var(--text); }
