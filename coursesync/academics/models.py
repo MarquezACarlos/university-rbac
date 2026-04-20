@@ -210,3 +210,18 @@ class TAProfile(models.Model):
 
     def __str__(self):
         return f"{self.user.get_full_name()} — TA for {self.course}"
+
+
+class AuditLog(models.Model):
+    actor_label = models.CharField(max_length=150)
+    action = models.CharField(max_length=200)
+    target = models.CharField(max_length=200)
+    event_type = models.CharField(max_length=150)
+    color = models.CharField(max_length=10, default="green")
+    timestamp = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ["-timestamp"]
+
+    def __str__(self):
+        return f"[{self.timestamp:%H:%M:%S}] {self.actor_label} {self.action} {self.target}"
